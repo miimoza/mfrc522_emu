@@ -1,0 +1,884 @@
+From cc38496961430b30df0f53d599179ae8652255dc Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Geoffrey=20Le=20Gourri=C3=A9rec?=
+ <geoffrey.legourrierec@smile.fr>
+Date: Tue, 2 Jun 2020 23:37:44 +0200
+Subject: [PATCH 1/3] Add support for an emulated MFRC522 module
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The MFRC522 is a small ISO/IEC 14443 compatible Proximity
+Coupling Device, exposing a number of commands and registers
+through SPI, I2C, or UART.
+
+This patch offers a small emulation of it for the GISTRE
+students at EPITA.
+
+Signed-off-by: Geoffrey Le Gourriérec <geoffrey.legourrierec@smile.fr>
+---
+ drivers/Kconfig                        |   2 +
+ drivers/Makefile                       |   3 +
+ drivers/gistre/Kconfig                 |  15 ++
+ drivers/gistre/Makefile                |   6 +
+ drivers/gistre/mfrc522.h               |  48 +++++
+ drivers/gistre/mfrc522_emu.c           | 330 +++++++++++++++++++++++++++++++++
+ drivers/gistre/mfrc522_emu.h           |  32 ++++
+ drivers/gistre/mfrc522_emu_drv.c       | 180 ++++++++++++++++++
+ drivers/gistre/mfrc522_emu_internals.c |  97 ++++++++++
+ drivers/gistre/mfrc522_emu_internals.h |  65 +++++++
+ 10 files changed, 778 insertions(+)
+ create mode 100644 drivers/gistre/Kconfig
+ create mode 100644 drivers/gistre/Makefile
+ create mode 100644 drivers/gistre/mfrc522.h
+ create mode 100644 drivers/gistre/mfrc522_emu.c
+ create mode 100644 drivers/gistre/mfrc522_emu.h
+ create mode 100644 drivers/gistre/mfrc522_emu_drv.c
+ create mode 100644 drivers/gistre/mfrc522_emu_internals.c
+ create mode 100644 drivers/gistre/mfrc522_emu_internals.h
+
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+index e1e2066..a158ddd 100644
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -202,4 +202,6 @@ source "drivers/hwtracing/intel_th/Kconfig"
+ 
+ source "drivers/fpga/Kconfig"
+ 
++source "drivers/gistre/Kconfig"
++
+ endmenu
+diff --git a/drivers/Makefile b/drivers/Makefile
+index 194d20b..7f993c1 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -173,3 +173,6 @@ obj-$(CONFIG_STM)		+= hwtracing/stm/
+ obj-$(CONFIG_ANDROID)		+= android/
+ obj-$(CONFIG_NVMEM)		+= nvmem/
+ obj-$(CONFIG_FPGA)		+= fpga/
++
++# Drivers for GISTRE
++obj-y += gistre/
+diff --git a/drivers/gistre/Kconfig b/drivers/gistre/Kconfig
+new file mode 100644
+index 0000000..d727549
+--- /dev/null
++++ b/drivers/gistre/Kconfig
+@@ -0,0 +1,15 @@
++#
++# GISTRE drivers
++#
++
++menu "GISTRE drivers support"
++
++config MFRC522_EMU
++	bool "GISTRE MFRC522 emulator"
++	help
++      Emulates a single MFRC522 NFC card reader device.
++      This device usually uses SPI, but the emulation uses the regmap
++      API and hides it behind a fake I2C device; which should not
++      matter in any way when communicating with it.
++
++endmenu
+diff --git a/drivers/gistre/Makefile b/drivers/gistre/Makefile
+new file mode 100644
+index 0000000..fefea26
+--- /dev/null
++++ b/drivers/gistre/Makefile
+@@ -0,0 +1,6 @@
++### Code for the GISTRE at EPITA
++
++obj-$(CONFIG_MFRC522_EMU)        += \
++	mfrc522_emu_internals.o \
++	mfrc522_emu.o \
++	mfrc522_emu_drv.o
+diff --git a/drivers/gistre/mfrc522.h b/drivers/gistre/mfrc522.h
+new file mode 100644
+index 0000000..d4187db
+--- /dev/null
++++ b/drivers/gistre/mfrc522.h
+@@ -0,0 +1,48 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++
++#ifndef _MFRC522_H
++#define _MFRC522_H
++
++/* Device tree representation of the MFRC522 emulated device
++ */
++#define MFRC522_PROP_VERSION     "version"
++
++/* Register map
++ */
++#define MFRC522_CMDREG    0x01
++#define MFRC522_CMDREG_CMD          0x0F
++#define MFRC522_CMDREG_SOFTPWRDOWN  0x10
++#define MFRC522_CMDREG_RCVOFF       0x20
++#define MFRC522_FIFODATAREG    0x09
++#define MFRC522_FIFOLEVELREG    0x0A
++#define MFRC522_FIFOLEVELREG_LEVEL  0x7F
++#define MFRC522_FIFOLEVELREG_FLUSH  0x80
++
++/* Command set
++ */
++#define MFRC522_IDLE                0x0
++#define MFRC522_MEM                 0x1
++#define MFRC522_GENERATERANDOMID    0x2
++#define MFRC522_NOCMDCHANGE         0x7
++#define MFRC522_SOFTRESET           0xF
++
++/* Forward declarations
++ */
++struct device;
++struct mfrc522_dev;
++
++/* Find any MFRC522 device in the system, and return a pointer
++ * to its core struct device object. Otherwise, return NULL.
++ */
++struct device *mfrc522_find_dev(void);
++
++/* Get the complete MFRC522 device from its core struct device.
++ */
++struct mfrc522_dev *dev_to_mfrc522(const struct device *);
++
++/* Get the regmap handle associated with the MFRC522 device.
++ * This is the object you'll use to communicate with it.
++ */
++struct regmap *mfrc522_get_regmap(const struct mfrc522_dev *);
++
++#endif /* _MFRC522_H */
+diff --git a/drivers/gistre/mfrc522_emu.c b/drivers/gistre/mfrc522_emu.c
+new file mode 100644
+index 0000000..2d3ccec
+--- /dev/null
++++ b/drivers/gistre/mfrc522_emu.c
+@@ -0,0 +1,330 @@
++#include <linux/i2c.h>
++#include <linux/kernel.h>
++#include <linux/random.h>
++#include <linux/regmap.h>
++#include <linux/spinlock.h>
++
++#include "mfrc522.h"
++#include "mfrc522_emu.h"
++#include "mfrc522_emu_internals.h"
++
++/* Wrappers over mfrc522_emu_internals.h *
++ *****************************************/
++
++#define MFRC522_REG_RD(mfrc522, reg) \
++    mfrc522_reg_rd(&(mfrc522)->internals, reg)
++#define MFRC522_REG_WR(mfrc522, reg, val) \
++    mfrc522_reg_wr(&(mfrc522)->internals, reg, val)
++#define MFRC522_REG_UPDATE(mfrc522, reg, val, mask) \
++    mfrc522_reg_update(&(mfrc522)->internals, reg, val, mask)
++
++#define MFRC522_FIFO_CUR_SIZE(mfrc522) \
++    mfrc522_fifo_cur_size(&(mfrc522)->internals)
++#define MFRC522_FIFO_RD(mfrc522) \
++    mfrc522_fifo_rd(&(mfrc522)->internals)
++#define MFRC522_FIFO_WR(mfrc522, val) \
++    mfrc522_fifo_wr(&(mfrc522)->internals, val)
++#define MFRC522_FIFO_RESET(mfrc522) \
++    mfrc522_fifo_reset(&(mfrc522)->internals)
++
++#define MFRC522_MEM_RD(mfrc522, i) \
++    mfrc522_mem_rd(&(mfrc522)->internals, i)
++#define MFRC522_MEM_WR(mfrc522, i, val) \
++    mfrc522_mem_wr(&(mfrc522)->internals, i, val)
++
++/* Forward declarations *
++ ************************/
++
++static bool mfrc522_readable_reg(struct device *dev, unsigned int reg);
++static bool mfrc522_writeable_reg(struct device *dev, unsigned int reg);
++static int mfrc522_reg_read(void *context, unsigned int reg, unsigned int *val);
++static int mfrc522_reg_write(void *context, unsigned int reg, unsigned int val);
++
++/* Global objects, e.g. the regmap configuration *
++ *************************************************/
++
++/* Register map configuration for the emulated MFRC522 device.
++ * Same one for any instance of such a device.
++ */
++static struct regmap_config mfrc522_regmap_conf = {
++    .reg_bits = 8,
++    .reg_stride = 1,
++    .val_bits = 8,
++    .writeable_reg = mfrc522_writeable_reg,
++    .readable_reg  = mfrc522_readable_reg,
++    .reg_read  = mfrc522_reg_read,
++    .reg_write = mfrc522_reg_write,
++    .max_register = MFRC522_MAX_REG,
++};
++
++/* Emulated MFRC522 command set *
++ ********************************/
++
++static int mfrc522_mem(struct mfrc522_dev *mfrc522) {
++
++    unsigned int i;
++
++    if (MFRC522_FIFO_CUR_SIZE(mfrc522) > 0) {
++        /* Write 25 bytes from FIFO to internal memory buffer */
++        for (i = 0; i < MFRC522_INTERNAL_MEM_LEN; ++i) {
++            MFRC522_MEM_WR(mfrc522, i, MFRC522_FIFO_RD(mfrc522));
++        }
++    }
++    else {
++        /* Read 25 bytes from internal memory buffer to FIFO */
++        for (i = 0; i < MFRC522_INTERNAL_MEM_LEN; ++i) {
++            MFRC522_FIFO_WR(mfrc522, MFRC522_MEM_RD(mfrc522, i));
++        }
++    }
++    return 0;
++}
++
++static int mfrc522_gen_rand_id(struct mfrc522_dev *mfrc522) {
++
++    const size_t nb_bytes = 10;
++    u8 buf[nb_bytes];
++    size_t i;
++
++    get_random_bytes(buf, nb_bytes);
++
++    /* As specified in the datasheet, this "overwrites the 10 bytes
++     * in the internal 25-byte buffer". */
++    for (i = 0; i < nb_bytes; ++i) {
++        MFRC522_MEM_WR(mfrc522, i, buf[i]);
++    }
++
++    return 0;
++}
++
++static int mfrc522_softreset(struct mfrc522_dev *mfrc522) {
++
++    mfrc522_regs_init(mfrc522->internals.regs);
++    return 0;
++}
++
++/* High-level command set helpers *
++ **********************************/
++
++static bool mfrc522_cmd_can_autofinish(unsigned int cmd) {
++
++    switch (cmd) {
++    case MFRC522_IDLE:
++    case MFRC522_MEM:
++    case MFRC522_GENERATERANDOMID:
++    case MFRC522_NOCMDCHANGE:
++    case MFRC522_SOFTRESET:
++        return true;
++    default:
++        return false;
++    }
++}
++
++static int mfrc522_start_cmd(struct mfrc522_dev *mfrc522, unsigned int cmd) {
++
++    int ret = 0;
++
++    switch (cmd) {
++    case MFRC522_IDLE:
++        /* Do nothing */
++        break;
++    case MFRC522_MEM:
++        ret = mfrc522_mem(mfrc522);
++        break;
++    case MFRC522_GENERATERANDOMID:
++        ret = mfrc522_gen_rand_id(mfrc522);
++        break;
++    case MFRC522_NOCMDCHANGE:
++        /* Do nothing */
++        /* TODO: When asynchronous command execution will be
++         * implemented, this will have to be handled higher
++         * in the call stack, because contrary to Idle, the
++         * current command is untouched. */
++        break;
++    case MFRC522_SOFTRESET:
++        ret = mfrc522_softreset(mfrc522);
++        break;
++    default:
++        ret = -EINVAL;
++        break;
++    }
++
++    if (mfrc522_cmd_can_autofinish(cmd)) {
++        MFRC522_REG_WR(mfrc522, MFRC522_CMDREG, MFRC522_IDLE);
++        /* Give back the command lock that the next command
++         * start might be waiting on. This happens when the
++         * command currently processed here can terminate
++         * automatically, in which case we serialize access
++         * to MFRC522_CMDREG to ease emulation work. */
++        spin_unlock(&mfrc522->cmd_lock);
++    }
++
++    return ret;
++}
++
++int mfrc522_setup(struct mfrc522_dev *mfrc522, struct i2c_client *i2c) {
++
++    struct regmap *regmap;
++
++    regmap = devm_regmap_init(
++        &i2c->dev,
++        NULL /* no bus */,
++        mfrc522 /* bus context */,
++        &mfrc522_regmap_conf);
++    if (IS_ERR(regmap)) {
++        return 1;
++    }
++    mfrc522->regmap = regmap;
++    spin_lock_init(&mfrc522->cmd_lock);
++    mfrc522_internals_init(&mfrc522->internals);
++
++    return 0;
++}
++
++void mfrc522_teardown(struct mfrc522_dev *mfrc522) {
++
++    regmap_exit(mfrc522->regmap);
++}
++
++/* Regmap API *
++ **************/
++
++bool mfrc522_readable_reg(struct device *dev, unsigned int reg) {
++
++    /* Unused */
++    (void)dev;
++
++    switch (reg) {
++    case MFRC522_CMDREG:
++    case MFRC522_FIFODATAREG:
++    case MFRC522_FIFOLEVELREG:
++        return true;
++    default:
++        return false;
++    }
++}
++
++bool mfrc522_writeable_reg(struct device *dev, unsigned int reg) {
++
++    /* Unused */
++    (void)dev;
++
++    switch (reg) {
++    case MFRC522_CMDREG:
++    case MFRC522_FIFODATAREG:
++    case MFRC522_FIFOLEVELREG:
++        return true;
++    default:
++        return false;
++    }
++}
++
++int mfrc522_reg_read(void *context, unsigned int reg, unsigned int *val) {
++
++    struct mfrc522_dev *mfrc522 = (struct mfrc522_dev *)context;
++
++    switch (reg) {
++    case MFRC522_FIFODATAREG:
++        MFRC522_REG_WR(mfrc522, MFRC522_FIFODATAREG, MFRC522_FIFO_RD(mfrc522));
++        break;
++    case MFRC522_FIFOLEVELREG:
++        MFRC522_REG_WR(
++            mfrc522,
++            MFRC522_FIFOLEVELREG,
++            MFRC522_FIFO_CUR_SIZE(mfrc522));
++    default:
++        break;
++    }
++
++    *val = MFRC522_REG_RD(mfrc522, reg);
++
++    /* A register may not be fully readable. Zero out all bits
++     * that are not part of the readable mask, or are indicated
++     * as reserved in the datasheet. */
++    switch (reg) {
++    case MFRC522_CMDREG:
++        *val &=
++            MFRC522_CMDREG_CMD         |
++            MFRC522_CMDREG_SOFTPWRDOWN |
++            MFRC522_CMDREG_RCVOFF;
++        break;
++    case MFRC522_FIFOLEVELREG:
++        *val &= MFRC522_FIFOLEVELREG_LEVEL;
++        break;
++    default:
++        break;
++    }
++
++    return 0;
++}
++
++int mfrc522_reg_write(void *context, unsigned int reg, unsigned int val) {
++
++    struct mfrc522_dev *mfrc522 = (struct mfrc522_dev *)context;
++    unsigned int mask = 0xFF;
++
++    /* If the command can terminate by itself, wait it out:
++     * cutting a command right in the middle is needlessly
++     * complicated work for now.
++     */
++    if (reg == MFRC522_CMDREG &&
++        mfrc522_cmd_can_autofinish(MFRC522_REG_RD(mfrc522, MFRC522_CMDREG))) {
++        spin_lock(&mfrc522->cmd_lock);
++    }
++
++    /* A register may not be fully writeable. Specify all bits
++     * that are part of the writeable mask. This does not
++     * include bits indicated as reserved in the the datasheet.
++     */
++    switch (reg) {
++    case MFRC522_CMDREG:
++        mask = 
++            MFRC522_CMDREG_CMD         |
++            MFRC522_CMDREG_SOFTPWRDOWN |
++            MFRC522_CMDREG_RCVOFF;
++        break;
++    case MFRC522_FIFOLEVELREG:
++        mask = MFRC522_FIFOLEVELREG_FLUSH;
++        break;
++    default:
++        break;
++    }
++
++    MFRC522_REG_UPDATE(mfrc522, reg, val, mask);
++
++    switch (reg) {
++    case MFRC522_CMDREG:
++        /* TODO: Handle SOFTPWRDOWN and RCVOFF */
++        mfrc522_start_cmd(mfrc522, MFRC522_REG_RD(mfrc522, MFRC522_CMDREG));
++        break;
++    case MFRC522_FIFODATAREG:
++        MFRC522_FIFO_WR(mfrc522, val);
++        break;
++    case MFRC522_FIFOLEVELREG:
++        if (MFRC522_REG_RD(mfrc522, MFRC522_FIFOLEVELREG) &
++            MFRC522_FIFOLEVELREG_FLUSH) {
++            /* TODO: Handle ErrorReg */
++            MFRC522_FIFO_RESET(mfrc522);
++            /* Don't forget to reset this bit */
++            MFRC522_REG_UPDATE(mfrc522, reg, 0, MFRC522_FIFOLEVELREG_FLUSH);
++        }
++        break;
++    default:
++        BUG_ON(! "Invalid register should have already been detected");
++        break;
++    }
++
++    return 0;
++}
++
++/* Public API *
++ **************/
++
++struct mfrc522_dev *dev_to_mfrc522(const struct device *dev) {
++
++    return i2c_get_clientdata(container_of(dev, struct i2c_client, dev));
++}
++
++struct regmap *mfrc522_get_regmap(const struct mfrc522_dev *mfrc522) {
++
++    return mfrc522->regmap;
++}
+diff --git a/drivers/gistre/mfrc522_emu.h b/drivers/gistre/mfrc522_emu.h
+new file mode 100644
+index 0000000..7863cb6
+--- /dev/null
++++ b/drivers/gistre/mfrc522_emu.h
+@@ -0,0 +1,32 @@
++#ifndef _MFRC522_EMU_H
++#define _MFRC522_EMU_H
++
++#include <linux/spinlock.h>
++
++#include "mfrc522_emu_internals.h"
++
++/* Forward declarations
++ */
++struct regmap;
++struct regmap_config;
++struct i2c_client;
++
++/* Device definition *
++ *********************/
++
++struct mfrc522_dev {
++    struct regmap *regmap;
++
++    spinlock_t cmd_lock;
++
++    struct mfrc522_internals internals;
++};
++
++/* Device API *
++ **************/
++
++// TODO: we can make this bus-agnostic
++int mfrc522_setup(struct mfrc522_dev *mfrc522, struct i2c_client *i2c);
++void mfrc522_teardown(struct mfrc522_dev *mfrc522);
++
++#endif /* _MFRC522_EMU_H */
+diff --git a/drivers/gistre/mfrc522_emu_drv.c b/drivers/gistre/mfrc522_emu_drv.c
+new file mode 100644
+index 0000000..6f80a5a
+--- /dev/null
++++ b/drivers/gistre/mfrc522_emu_drv.c
+@@ -0,0 +1,180 @@
++#include <linux/i2c.h>
++#include <linux/mod_devicetable.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/printk.h>
++#include <linux/spinlock.h>
++#include <linux/slab.h>
++
++#include "mfrc522.h"
++#include "mfrc522_emu.h"
++
++MODULE_AUTHOR("Geoffrey Le Gourriérec");
++MODULE_LICENSE("GPL v2");
++MODULE_DESCRIPTION("An emulated MFRC522 device.");
++
++/* Helper macros *
++ *****************/
++
++/* Only a single emulated device is handled for now.
++ */
++#define MFRC522_MAX_NB_EMULATED_DEVS      1
++
++#define MFRC522_I2C_DEVICE_ID    0
++
++#define MFRC522_NAME             "mfrc522_emu"
++
++/* Forward declarations *
++ ************************/
++
++static int mfrc522_probe(struct i2c_client *, const struct i2c_device_id *);
++static int mfrc522_remove(struct i2c_client *);
++
++/* Global objects, e.g. the I2C driver *
++ ***************************************/
++
++/* All emulated MFRC522 devices
++ */
++static struct mfrc522_dev *mfrc522_emu_devs[MFRC522_MAX_NB_EMULATED_DEVS];
++
++/* We can't avoid declaring both i2c and of device IDs, see below */
++static struct i2c_device_id mfrc522_i2c_ids[] = {
++    { "mfrc522_emu", MFRC522_I2C_DEVICE_ID },
++    { /* sentinel */ },
++};
++MODULE_DEVICE_TABLE(i2c, mfrc522_i2c_ids);
++
++static struct of_device_id mfrc522_of_ids[] = {
++    { .compatible = "gistre,mfrc522_emu", },
++    { /* sentinel */ },
++};
++MODULE_DEVICE_TABLE(of, mfrc522_of_ids);
++
++static struct i2c_driver mfrc522_drv = {
++    .driver = {
++        .name = "mfrc522_emu",
++        .owner = THIS_MODULE,
++        .of_match_table = mfrc522_of_ids,
++    },
++    /* For kernels <= 4.10, it is still mandatory to specify the
++     * i2c_device_id event if we're using device tree, contrary
++     * to SPI drivers. See chapter 7 of "Linux Device Drivers
++     * Development" (Packt) by John Madieu.
++     */
++    .id_table = mfrc522_i2c_ids,
++    .probe = mfrc522_probe,
++    .remove = mfrc522_remove,
++};
++
++/* Helper functions *
++ ********************/
++
++static int mfrc522_match_dev_by_name(struct device *dev, void *data) {
++
++    const char *name = data;
++
++    return strcmp(name, dev->of_node->name) == 0;
++}
++
++static struct mfrc522_dev **mfrc522_find_dev_slot(void) {
++
++    size_t i = 0;
++
++    for (; i < MFRC522_MAX_NB_EMULATED_DEVS; ++i) {
++        if (mfrc522_emu_devs[i] == NULL) {
++            return &mfrc522_emu_devs[i];
++        }
++    }
++    return NULL;
++}
++
++static void mfrc522_free_dev_slot(struct mfrc522_dev *mfrc522) {
++
++    size_t i = 0;
++
++    for (; i < MFRC522_MAX_NB_EMULATED_DEVS; ++i) {
++        if (mfrc522_emu_devs[i] == mfrc522) {
++            mfrc522_emu_devs[i] = NULL;
++        }
++    }
++}
++
++/* I2C driver API *
++ ******************/
++
++int mfrc522_probe(struct i2c_client *i2c, const struct i2c_device_id *id) {
++
++    struct mfrc522_dev **mfrc522;
++
++    /* Unused */
++    (void)id;
++
++    mfrc522 = mfrc522_find_dev_slot();
++    if (! mfrc522) {
++        return -ENOTSUPP;
++    }
++    *mfrc522 = kzalloc(sizeof(**mfrc522), GFP_KERNEL);
++    if (! *mfrc522) {
++        return -ENOMEM;
++    }
++    if (mfrc522_setup(*mfrc522, i2c)) {
++        kfree(*mfrc522);
++        mfrc522_free_dev_slot(*mfrc522);
++        return 1;
++    }
++    i2c_set_clientdata(i2c, *mfrc522);
++
++    return 0;
++}
++
++int mfrc522_remove(struct i2c_client *i2c) {
++
++    struct mfrc522_dev *mfrc522;
++
++    mfrc522 = i2c_get_clientdata(i2c);
++    mfrc522_teardown(mfrc522);
++    kfree(mfrc522);
++    mfrc522_free_dev_slot(mfrc522);
++
++    return 0;
++}
++
++/* Public API *
++ **************/
++
++struct device *mfrc522_find_dev(void) {
++
++    char *name = MFRC522_NAME;
++
++    return bus_find_device(
++        &i2c_bus_type,
++        NULL,
++        name,
++        mfrc522_match_dev_by_name);
++}
++
++/* Initialization and Removal *
++ ******************************/
++
++__init
++static int mfrc522_init(void) {
++
++	pr_info("Hello, emulated MFRC522 !\n");
++
++    if (i2c_add_driver(&mfrc522_drv) < 0) {
++        return 1;
++    }
++
++	return 0;
++}
++
++__exit
++static void mfrc522_exit(void) {
++
++    i2c_del_driver(&mfrc522_drv);
++
++    pr_info("Goodbye, emulated MFRC522...\n");
++}
++
++module_init(mfrc522_init);
++module_exit(mfrc522_exit);
+diff --git a/drivers/gistre/mfrc522_emu_internals.c b/drivers/gistre/mfrc522_emu_internals.c
+new file mode 100644
+index 0000000..1075cc4
+--- /dev/null
++++ b/drivers/gistre/mfrc522_emu_internals.c
+@@ -0,0 +1,97 @@
++#include <linux/string.h>
++
++#include "mfrc522.h"
++#include "mfrc522_emu_internals.h"
++
++void mfrc522_internals_init(struct mfrc522_internals *internals) {
++
++    memset(internals->fifo, 0, MFRC522_FIFO_LEN);
++    internals->fifo_wr_ptr = 0;
++    internals->fifo_rd_ptr = 0;
++
++    memset(internals->mem, 0, MFRC522_INTERNAL_MEM_LEN);
++
++    mfrc522_regs_init(internals->regs);
++}
++
++void mfrc522_regs_init(u8 *regs) {
++
++    /* Not all registers are handled for now. By default, their
++     * value will have zero, which is perfectly fine if we don't
++     * touch them anyway. */
++    memset(regs, 0, MFRC522_MAX_REG);
++
++    regs[MFRC522_CMDREG] = 0x20;
++    /* FIFODATAREG is OK */
++    /* FIFOLEVELREG is OK */
++}
++
++u8 mfrc522_reg_rd(struct mfrc522_internals *internals, u8 reg) {
++
++    return internals->regs[reg];
++}
++
++void mfrc522_reg_wr(struct mfrc522_internals *internals, u8 reg, u8 val) {
++
++    internals->regs[reg] = val;
++}
++
++void mfrc522_reg_update(
++    struct mfrc522_internals *internals,
++    u8 reg,
++    u8 val,
++    u8 mask) {
++
++    u8 tmp = internals->regs[reg];
++    tmp &= ~(mask);
++    tmp |= val & (mask);
++    internals->regs[reg] = tmp;
++}
++
++unsigned int mfrc522_fifo_cur_size(const struct mfrc522_internals *internals) {
++
++    return internals->fifo_wr_ptr > internals->fifo_rd_ptr ?
++     (internals->fifo_wr_ptr - internals->fifo_rd_ptr) :
++     (internals->fifo_rd_ptr - internals->fifo_wr_ptr);
++}
++
++u8 mfrc522_fifo_rd(struct mfrc522_internals *internals) {
++
++    if (mfrc522_fifo_cur_size(internals) == 0) {
++        return 0;
++    }
++    else {
++        u8 val = internals->fifo[internals->fifo_rd_ptr++];
++        if (internals->fifo_rd_ptr == MFRC522_FIFO_LEN) {
++            internals->fifo_rd_ptr = 0;
++        }
++        return val;
++    }
++}
++
++void mfrc522_fifo_wr(struct mfrc522_internals *internals, u8 val) {
++
++    internals->fifo[internals->fifo_wr_ptr++] = val;
++    if (internals->fifo_wr_ptr == MFRC522_FIFO_LEN) {
++        internals->fifo_wr_ptr = 0;
++    }
++}
++
++void mfrc522_fifo_reset(struct mfrc522_internals *internals) {
++
++    internals->fifo_wr_ptr = 0;
++    internals->fifo_rd_ptr = 0;
++}
++
++u8 mfrc522_mem_rd(struct mfrc522_internals *internals, unsigned int i) {
++
++    return internals->mem[i];
++}
++
++void mfrc522_mem_wr(
++    struct mfrc522_internals *internals,
++    unsigned int i,
++    u8 val) {
++
++    internals->mem[i] = val;
++}
+diff --git a/drivers/gistre/mfrc522_emu_internals.h b/drivers/gistre/mfrc522_emu_internals.h
+new file mode 100644
+index 0000000..987cb93
+--- /dev/null
++++ b/drivers/gistre/mfrc522_emu_internals.h
+@@ -0,0 +1,65 @@
++#ifndef _MFRC522_EMU_INTERNALS_H
++#define _MFRC522_EMU_INTERNALS_H
++
++#include <linux/compiler-gcc.h>
++
++/* Internal memory details
++ */
++#define MFRC522_FIFO_LEN    64
++#define MFRC522_MAX_REG     0x40
++#define MFRC522_INTERNAL_MEM_LEN     25
++
++/* Device definition *
++ *********************/
++
++struct mfrc522_internals {
++    /* Read/write FIFO, interfaced with FifoDataReg */
++    u8 fifo[MFRC522_FIFO_LEN];
++    u8 fifo_wr_ptr;
++    u8 fifo_rd_ptr;
++
++    /* Internal memory, interfaced with the FIFO, and used to
++     * perform actual data processing. */
++    u8 mem[MFRC522_INTERNAL_MEM_LEN];
++
++    /* Don't bother trying to scrap some bytes, go from zero to
++     * whatever address the last register is at. */
++    u8 regs[MFRC522_MAX_REG];
++};
++void mfrc522_internals_init(struct mfrc522_internals *internals);
++
++/* Register map manipulation *
++ *****************************/
++
++void mfrc522_regs_init(u8 *regs);
++u8 mfrc522_reg_rd(struct mfrc522_internals *internals, u8 reg);
++void mfrc522_reg_wr(struct mfrc522_internals *internals, u8 reg, u8 val);
++void mfrc522_reg_update(
++    struct mfrc522_internals *internals,
++    u8 reg,
++    u8 val,
++    u8 mask);
++
++/* FIFO manipulation *
++ *********************/
++
++unsigned int mfrc522_fifo_cur_size(const struct mfrc522_internals *internals);
++/* Return the next byte from the FIFO, or zero if it is empty.
++ */
++u8 mfrc522_fifo_rd(struct mfrc522_internals *internals);
++/* Please note that writing to the FIFO is destructive: even
++ * if data had not been read yet, we overwrite it.
++ */
++void mfrc522_fifo_wr(struct mfrc522_internals *internals, u8 val);
++void mfrc522_fifo_reset(struct mfrc522_internals *internals);
++
++/* Internal buffer manipulation *
++ ********************************/
++
++u8 mfrc522_mem_rd(struct mfrc522_internals *internals, unsigned int i);
++void mfrc522_mem_wr(
++    struct mfrc522_internals *internals,
++    unsigned int i,
++    u8 val);
++
++#endif /* _MFRC522_EMU_INTERNALS_H */
+-- 
+2.7.4
+

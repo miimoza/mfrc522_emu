@@ -1,0 +1,44 @@
+From 581a1e44bfc8187777d70561873f6ab07f998be8 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Geoffrey=20Le=20Gourri=C3=A9rec?=
+ <geoffrey.legourrierec@smile.fr>
+Date: Tue, 2 Jun 2020 23:51:34 +0200
+Subject: [PATCH 2/3] Describe fake MFRC522 device in Versatile PB device tree
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Use the I2C bus to "hide" our fake device, and not the SPI bus,
+because the latter is part of the AMBA bus and not supported
+by QEMU, as described here: https://patchwork.openembedded.org/patch/130741/
+
+Signed-off-by: Geoffrey Le Gourriérec <geoffrey.legourrierec@smile.fr>
+---
+ arch/arm/boot/dts/versatile-ab.dts | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm/boot/dts/versatile-ab.dts b/arch/arm/boot/dts/versatile-ab.dts
+index 409e069..3b295dc 100644
+--- a/arch/arm/boot/dts/versatile-ab.dts
++++ b/arch/arm/boot/dts/versatile-ab.dts
+@@ -135,6 +135,18 @@
+ 			compatible = "dallas,ds1338";
+ 			reg = <0x68>;
+ 		};
++
++		/* Fake MFR522 card reader.
++		 * This is supposed to be under a SPI bus, but QEMU does
++		 * not emulate the SSP (SPI) bus here, or anything under
++		 * the AMBA for that matter.
++		 */
++		mfrc522_emu@63 {
++			compatible = "gistre,mfrc522_emu";
++			reg = <0x63>;
++			version = <1>;
++			status = "okay";
++		};
+ 	};
+ 
+ 	net@10010000 {
+-- 
+2.7.4
+
