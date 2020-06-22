@@ -11,6 +11,7 @@ ssize_t cardio_read(struct file *file, char __user *buf,
     size_t len, loff_t *off /* unused */)
 {
     pr_info("reax\n");
+    //regmap_read(struct regmap *map, unsigned int reg, unsigned int *val);
     return 0;
 }
 
@@ -18,5 +19,6 @@ ssize_t cardio_write(struct file *file, const char __user *buf,
     size_t len, loff_t *off /* unused */)
 {
     pr_info("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwd\ntamere");
+    //regmap_write(struct regmap *map, unsigned int reg, unsigned int val);
     return 0;
 }
