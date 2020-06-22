@@ -1,6 +1,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include "mfrc522.h"
+#include "mfrc522_emu.h"
 #include <linux/regmap.h>
 
 __init
