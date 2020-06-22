@@ -6,6 +6,7 @@
 #include <linux/of.h>
 
 #define MFRC522_NAME "mfrc522_emu"
+#define MFRC522_PROP "status"
 
 /*
  * Metadata
@@ -38,10 +39,10 @@ static int gistre_card_init(void) {
 	//pr_info("cmd reg cmd: %d\n", cmd_reg_cmd);
 
 	const char *version;
-	if (of_property_read_string_helper(device_node, MFRC522_PROP_VERSION, &version))
-		pr_err("%s: Did not find property \"%s\"\n", __func__, MFRC522_PROP_VERSION);
+	if (of_property_read_string(device_node, MFRC522_PROP, &version))
+		pr_err("%s: Did not find property \"%s\"\n", __func__, MFRC522_PROP);
 	else
-		pr_info("%s: \"%s\": %s\n", __func__, MFRC522_PROP_VERSION, version);
+		pr_info("%s: \"%s\": %s\n", __func__, MFRC522_PROP, version);
 
 	return 0;
 }
