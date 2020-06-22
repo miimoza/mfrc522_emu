@@ -1,6 +1,6 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
-#include <linux/drivers/gistre/mfrc522.h>
+#include "mfrc522.h"
 #include <linux/include/linux/regmap.h>
 
 __init
