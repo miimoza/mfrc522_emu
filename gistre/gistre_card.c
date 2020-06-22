@@ -3,6 +3,7 @@
 #include "mfrc522.h"
 #include "mfrc522_emu.h"
 #include <linux/regmap.h>
+#include <linux/of.h>
 
 __init
 static int gistre_card_init(void) {
@@ -19,6 +20,17 @@ static int gistre_card_init(void) {
 	regmap_read(rm, MFRC522_CMDREG_CMD, &cmd_reg_cmd);
 
 	pr_info("cmd reg cmd: %d\n", cmd_reg_cmd);
+
+
+	u32 handle = 0;
+	struct device_node *dev_node = of_find_node_by_phandle(handle);
+
+	u64 version;
+	of_property_read_u64(dev_node, MFRC522_PROP_VERSION, &version);
+	pr_info("Version: %d\n", version);
+
+
+
 
 	return 0;
 }
