@@ -37,11 +37,11 @@ static int gistre_card_init(void) {
 	//regmap_read(rm, MFRC522_CMDREG_CMD, &cmd_reg_cmd);
 	//pr_info("cmd reg cmd: %d\n", cmd_reg_cmd);
 
-	u64 version;
+	char *version;
 	if (of_property_read_string(device_node, MFRC522_PROP_VERSION, &version))
 		pr_err("%s: Did not find property \"%s\"\n", __func__, MFRC522_PROP_VERSION);
 	else
-		pr_info("%s: \"%s\": %lu\n", __func__, MFRC522_PROP_VERSION, version);
+		pr_info("%s: \"%s\": %s\n", __func__, MFRC522_PROP_VERSION, version);
 
 	return 0;
 }
