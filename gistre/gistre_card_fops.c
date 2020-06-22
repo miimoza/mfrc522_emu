@@ -7,8 +7,8 @@ struct file_operations cardio_fops = {
  	/* Others functions are using the kernel's defaults */
 };
 
-ssize_t cardio_read(struct file *file, const char __user *buf,
-    size_t len, loff_t *off /* unused */)
+ssize_t cardio_read(struct file *file, char __user *buf,
+    size_t len, loff_t *off /* unused */) {
 {
     pr_info("reax\n");
     return 0;
