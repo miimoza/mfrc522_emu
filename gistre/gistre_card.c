@@ -1,7 +1,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include "mfrc522.h"
-#include <linux/include/linux/regmap.h>
+#include <linux/regmap.h>
 
 __init
 static int gistre_card_init(void) {
