@@ -28,10 +28,8 @@ static int gistre_card_init(void) {
 	mfrc522_dev = dev_to_mfrc522(device);
 	regmap = mfrc522_get_regmap(mfrc522_dev);
 	device_node = of_find_node_by_name(of_root, MFRC522_NAME);
-	if (!device_node) {
+	if (!device_node)
         pr_err("%s: Did not find node %s...\n", __func__, MFRC522_NAME);
-        return 0;
-    }
 
 	//pr_info("cmdlock: %d\n", mfrc->cmd_lock);
 
@@ -42,10 +40,8 @@ static int gistre_card_init(void) {
 	const char *version;
 	if (of_property_read_string(device_node, MFRC522_PROP_VERSION, &version))
 		pr_err("%s: Did not find property \"%s\"\n", __func__, MFRC522_PROP_VERSION);
-	}
-	else {
+	else
 		pr_info("%s: \"%s\": %s\n", __func__, MFRC522_PROP_VERSION, version);
-	}
 
 	return 0;
 }
