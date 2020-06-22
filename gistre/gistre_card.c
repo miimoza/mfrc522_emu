@@ -27,7 +27,7 @@ static int gistre_card_init(void) {
 	device = mfrc522_find_dev();
 	mfrc522_dev = dev_to_mfrc522(device);
 	regmap = mfrc522_get_regmap(mfrc522_dev);
-	device_node = of_find_node_by_name(of_root, "proutax a donf les mecs QHQH");
+	device_node = of_find_node_by_name(of_root, MFRC522_NAME);
 	if (!device_node)
         pr_err("%s: Did not find node %s...\n", __func__, MFRC522_NAME);
 
@@ -37,9 +37,9 @@ static int gistre_card_init(void) {
 	//regmap_read(rm, MFRC522_CMDREG_CMD, &cmd_reg_cmd);
 	//pr_info("cmd reg cmd: %d\n", cmd_reg_cmd);
 
-	const char *version;
-	if (of_property_read_string(device_node, MFRC522_PROP_VERSION, &version))
-		pr_err("%s: Did not find property \"%s\"\n", __func__, MFRC522_PROP_VERSION);
+	u64 version;
+	if (of_property_read_u64(device_node, MFRC522_PROP_VERSION, &version))
+		pr_err("%s: Did not find property \"%d\"\n", __func__, MFRC522_PROP_VERSION);
 	else
 		pr_info("%s: \"%s\": %s\n", __func__, MFRC522_PROP_VERSION, version);
 
