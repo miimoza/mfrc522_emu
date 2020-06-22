@@ -87,7 +87,7 @@ static int cardio_init(void) {
 		return -ENOMEM;
 	}
 
-	if (cdev_add(&pp_dev->cdev, dev, 1) < 0) {
+	if (cdev_add(&cio_dev->cdev, dev, 1) < 0) {
 		pr_err("Failed to register char device\n");
 		return -ENOMEM;
 	}
