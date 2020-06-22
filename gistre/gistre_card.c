@@ -28,7 +28,7 @@ static int gistre_card_init(void) {
 	//pr_info("cmd reg cmd: %d\n", cmd_reg_cmd);
 
 	const char *version;
-	of_property_read_string(dev_node, MFRC522_PROP_VERSION, &version);
+	of_property_read_string(device_node, MFRC522_PROP_VERSION, &version);
 	pr_info("Version: %s\n", version);
 
 	return 0;
