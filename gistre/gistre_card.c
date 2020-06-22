@@ -81,7 +81,7 @@ static int cardio_init(void) {
 	}
 
 	/* Register char device */
-	cio_dev = pingpong_create();
+	cio_dev = cardio_create();
 	if (!cio_dev) {
 		pr_err("Failed to init pingpong_dev\n");
 		return -ENOMEM;
@@ -126,7 +126,7 @@ static void cardio_exit(void) {
 	dev_t dev;
 
 	dev = MKDEV(major, 0);
-	pingpong_destroy(cio_dev);
+	cardio_destroy(cio_dev);
 	unregister_chrdev_region(dev, 1);
 
 	pr_info("Goodbye, GISTRE card !\n");
