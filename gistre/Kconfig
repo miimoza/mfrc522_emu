@@ -12,4 +12,9 @@ config MFRC522_EMU
       API and hides it behind a fake I2C device; which should not
       matter in any way when communicating with it.
 
+config FOO
+	bool "GISTRE card"
+	help
+	  Tiny Hello World.
+
 endmenu
