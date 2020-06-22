@@ -24,8 +24,8 @@ static int gistre_card_init(void) {
 	pr_info("cmd reg cmd: %d\n", cmd_reg_cmd);
 
 	struct device_node *dev_node = of_find_node_by_name(of_root, MFRC522_NAME);
-	char *version;
-	of_property_read_string(dev_node, MFRC522_PROP_VERSION, version);
+	const char *version;
+	of_property_read_string(dev_node, MFRC522_PROP_VERSION, &version);
 	pr_info("Version: %s\n", version);
 
 
