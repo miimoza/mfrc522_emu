@@ -5,6 +5,8 @@
 #include <linux/regmap.h>
 #include <linux/of.h>
 
+#define MFRC522_NAME "mfrc522_emu"
+
 __init
 static int gistre_card_init(void) {
 	pr_info("Hello, GISTRE card !\n");
