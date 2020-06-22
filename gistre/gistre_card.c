@@ -14,35 +14,19 @@
 #define MFRC522_NAME "mfrc522_emu"
 #define MFRC522_PROP MFRC522_PROP_VERSION
 
-/*
- * Metadata
- */
-
+// Metadata
 MODULE_DESCRIPTION("Cardio: a driver for the dummy \"Mfrc522\" iHaospace Kit RFID RC522, Module Carte de Lecteur MFRC-522 RF IC avec RFID Carte Puce Chip S50 13.56MHz pour Mifare Arduino Raspberry Pi device node");
 MODULE_AUTHOR("Caproute <cap.route@freemail.bcd>");
 MODULE_LICENSE("GPL v2");
 
-/*
- * Local definitions
- */
-
+// Local definitions
 struct cardio_dev {
 	struct cdev cdev;
 };
-
-/* Major will always be dynamically allocated */
 static int major;
 static struct cardio_dev *cio_dev;
 
-/*
- *  Init & Exit
- */
-
- static struct file_operations cardio_fops = {
- 	.owner   = THIS_MODULE
- 	/* Others functions are using the kernel's defaults */
- };
-
+// Init & Exit
 static struct cardio_dev *cardio_create(void) {
 
 	struct cardio_dev *dev = kmalloc(sizeof(*dev), GFP_KERNEL);
@@ -54,11 +38,6 @@ static struct cardio_dev *cardio_create(void) {
 	cdev_init(&dev->cdev, &cardio_fops);
 
 	return dev;
-}
-
-static void cardio_destroy(struct cardio_dev *dev) {
-	cdev_del(&dev->cdev);
-	kfree(dev);
 }
 
 __init
@@ -92,8 +71,6 @@ static int cardio_init(void) {
 		return -ENOMEM;
 	}
 
-
-
 	struct device *device;
 	struct mfrc522_dev *mfrc522_dev;
 	struct regmap *regmap;
@@ -104,22 +81,36 @@ static int cardio_init(void) {
 	regmap = mfrc522_get_regmap(mfrc522_dev);
 	device_node = of_find_node_by_name(of_root, MFRC522_NAME);
 	if (!device_node)
+	{
         pr_err("%s: Did not find node %s...\n", __func__, MFRC522_NAME);
+		return 1;
+	}
 
 	//pr_info("cmdlock: %d\n", mfrc->cmd_lock);
-
 	//unsigned int cmd_reg_cmd;
 	//regmap_read(rm, MFRC522_CMDREG_CMD, &cmd_reg_cmd);
 	//pr_info("cmd reg cmd: %d\n", cmd_reg_cmd);
 
 	u32 version;
 	if (of_property_read_u32(device_node, MFRC522_PROP, &version))
+	{
 		pr_err("%s: Did not find property \"%s\"\n", __func__, MFRC522_PROP);
+		return 1;
+	}
 	else
+	{
 		pr_info("%s: \"%s\": %u\n", __func__, MFRC522_PROP, version);
+	}
 
 	return 0;
 }
+
+
+static void cardio_destroy(struct cardio_dev *dev) {
+	cdev_del(&dev->cdev);
+	kfree(dev);
+}
+
 
 __exit
 static void cardio_exit(void) {
