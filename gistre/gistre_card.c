@@ -4,7 +4,6 @@
 #include "mfrc522_emu.h"
 #include <linux/regmap.h>
 #include <linux/of.h>
-#include <linux/platform_device.h>
 
 #define MFRC522_NAME "mfrc522_emu"
 
@@ -13,43 +12,12 @@
  */
 
 MODULE_DESCRIPTION("A driver for the dummy \"Mfrc522\" device node");
-MODULE_AUTHOR("Geoffrey Le Gourriérec <geoffrey.legourrierec@gmail.com>");
+MODULE_AUTHOR("Caproute <cap.route@gmail.com>");
 MODULE_LICENSE("GPL v2");
-
-/*
- * Global definitions
- */
-
-#define NODE_NAME   "mfrc522"
-#define FULLNAME    "fullname"
-#define AGE         "age"
-
-static const struct of_device_id mfrc522_ids[] = {
-    { .compatible = "dril-mfrc522", },
-    { /* sentinel */ },
-};
-MODULE_DEVICE_TABLE(of, mfrc522_ids);
-
-/*
- * Platform driver related functions
- */
-
-/* Our own platform driver instance.
- */
-static struct platform_driver mfrc522_pdrv = {
-    /* Keep default probe/remove definitions */
-    .driver = {
-        .name = "dril-mfrc522",
-        .owner = THIS_MODULE,
-        .of_match_table = mfrc522_ids,
-    },
-};
 
 __init
 static int gistre_card_init(void) {
 	pr_info("Hello, GISTRE card !\n");
-
-	platform_driver_register(&mfrc522_pdrv);
 
 	struct device *device;
 	struct mfrc522_dev *mfrc522_dev;
@@ -84,7 +52,6 @@ static int gistre_card_init(void) {
 
 __exit
 static void gistre_card_exit(void) {
-	platform_driver_unregister(&mfrc522_pdrv);
 	pr_info("Goodbye, GISTRE card !\n");
 }
 
