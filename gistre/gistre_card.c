@@ -39,9 +39,9 @@ static int gistre_card_init(void) {
 
 	u64 version;
 	if (of_property_read_u64(device_node, MFRC522_PROP_VERSION, &version))
-		pr_err("%s: Did not find property \"%d\"\n", __func__, MFRC522_PROP_VERSION);
+		pr_err("%s: Did not find property \"%s\"\n", __func__, MFRC522_PROP_VERSION);
 	else
-		pr_info("%s: \"%s\": %s\n", __func__, MFRC522_PROP_VERSION, version);
+		pr_info("%s: \"%s\": %lu\n", __func__, MFRC522_PROP_VERSION, version);
 
 	return 0;
 }
