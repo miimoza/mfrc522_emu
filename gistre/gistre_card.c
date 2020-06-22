@@ -27,7 +27,7 @@ static int gistre_card_init(void) {
 	device = mfrc522_find_dev();
 	mfrc522_dev = dev_to_mfrc522(device);
 	regmap = mfrc522_get_regmap(mfrc522_dev);
-	device_node = of_find_node_by_name(of_root, MFRC522_NAME);
+	device_node = of_find_node_by_name(of_root, "proutax a donf les mecs QHQH");
 	if (!device_node)
         pr_err("%s: Did not find node %s...\n", __func__, MFRC522_NAME);
 
