@@ -8,6 +8,8 @@
 #include <linux/regmap.h>
 #include <linux/of.h>
 
+#include "gistre_card_fops.h"
+
 #include "mfrc522.h"
 #include "mfrc522_emu.h"
 
