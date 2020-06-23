@@ -1,7 +1,7 @@
 #include <linux/regmap.h>
 
 #include "../mfrc522.h"
-#include "../mfrc522_dev.h"
+#include "../mfrc522_emu.h"
 #include "card_fops.h"
 
 ssize_t cardio_write(struct file *file, const char __user *buf, size_t len,
