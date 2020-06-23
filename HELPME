@@ -3,26 +3,33 @@
 MFRC522_CMDREG              0x01
     starts and stops command execution
 
-MFRC522_CMDREG_CMD          0x0F
-    ?
+    MFRC522_CMDREG_CMD          0x0F
+        activates a command based on the Command value
+        reading this register shows which command is executed
 
-MFRC522_CMDREG_SOFTPWRDOWN  0x10
-    ?
+    MFRC522_CMDREG_SOFTPWRDOWN  0x10
+        Soft power-down mode entered
 
-MFRC522_CMDREG_RCVOFF       0x20
-    ?
+    MFRC522_CMDREG_RCVOFF       0x20
+        analog part of the receiver is switched off
+
 
 MFRC522_FIFODATAREG         0x09
     input and output of 64 byte FIFO buffer
 
+
 MFRC522_FIFOLEVELREG        0x0A
     number of bytes stored in the FIFO buffer
 
-MFRC522_FIFOLEVELREG_LEVEL  0x7F
-    ?
+    MFRC522_FIFOLEVELREG_LEVEL  0x7F
+        indicates the number of bytes stored in the FIFO buffer
+        writing to the FIFODataReg register increments and reading decrements
+        the FIFOLevel value
 
-MFRC522_FIFOLEVELREG_FLUSH  0x80
-    ?
+    MFRC522_FIFOLEVELREG_FLUSH  0x80
+        immediately clears the internal FIFO buffer’s read and write pointer and
+        ErrorReg register’s BufferOvfl bit
+        reading this bit always returns 0
 
 # Command set
 MFRC522_IDLE                0x0
