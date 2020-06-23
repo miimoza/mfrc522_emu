@@ -72,14 +72,7 @@ __init static int cardio_init(void)
         return -ENOMEM;
     }
 
-    struct device *device;
-    struct mfrc522_dev *mfrc522_dev;
-    struct regmap *regmap;
     struct device_node *device_node;
-
-    device = mfrc522_find_dev();
-    mfrc522_dev = dev_to_mfrc522(device);
-    regmap = mfrc522_get_regmap(mfrc522_dev);
     device_node = of_find_node_by_name(of_root, MFRC522_NAME);
     if (!device_node) {
         pr_err("%s: Did not find node %s...\n", __func__, MFRC522_NAME);
