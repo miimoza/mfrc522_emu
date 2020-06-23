@@ -1,4 +1,3 @@
-cd mfrc522_emu
 git pull
 rm -rf ../linux/drivers/gistre
 cp -r gistre ../linux/drivers
