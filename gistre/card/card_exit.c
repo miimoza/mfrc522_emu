@@ -1,6 +1,7 @@
 #include <linux/slab.h>
 
 #include "card.h"
+#include "card_fops.h"
 
 static void cardio_destroy(struct cardio_dev *dev)
 {
