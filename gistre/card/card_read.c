@@ -27,5 +27,5 @@ ssize_t card_read(struct file *file, char __user *buf, size_t len,
 		len = 0;
 	}
 
-	return len;
+	return c_dev->buffer_len;
 }
