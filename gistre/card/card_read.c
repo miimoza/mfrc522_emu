@@ -11,10 +11,9 @@ ssize_t card_read(struct file *file, char __user *buf, size_t len,
 	pr_info("%s()\n", __func__);
 
 	// cdev = (struct pingpong_dev *)file->private_data;
-	if (cdev->buffer_len) {
-        len = min(len, cdev->buffer_len)
-
-		if (copy_to_user(buf, cdev->buffer, cdev->buffer_len)) {
+	if (c_dev->buffer_len) {
+        len = min(len, c_dev->buffer_len);
+		if (copy_to_user(buf, c_dev->buffer, c_dev->buffer_len)) {
 			pr_err("Failed to copy data to user\n");
 			return -EFAULT;
 		}
