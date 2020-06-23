@@ -4,6 +4,7 @@
 #include "../mfrc522.h"
 #include "../mfrc522_emu.h"
 #include "card_fops.h"
+#include "card.h"
 
 ssize_t card_read(struct file *file, char __user *buf, size_t len,
                     loff_t *off /* unused */)
