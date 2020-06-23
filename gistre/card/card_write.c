@@ -27,5 +27,5 @@ ssize_t card_write(struct file *file, const char __user *buf, size_t len,
 
     regmap_write(regmap, MFRC522_CMDREG, MFRC522_IDLE);
 
-    return 0;
+    return 25;
 }
