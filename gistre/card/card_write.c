@@ -31,9 +31,13 @@ ssize_t card_write(struct file *file, const char __user *buf, size_t len,
     pr_info("writting in MFRC522_FIFODATAREG: %d\n", 0);
     regmap_write(regmap, MFRC522_FIFODATAREG, 0);
 
+    regmap_write(regmap, MFRC522_CMDREG, MFRC522_IDLE);
+
+    regmap_write(regmap, MFRC522_CMDREG, MFRC522_MEM);
+
     for (i = 0; i < len; i++) {
         pr_info("reading from MFRC522_FIFODATAREG: ");
-        regmap_read(regmap, MFRC522_FIFODATAREG, c_dev->buffer[i]);
+        regmap_read(regmap, MFRC522_FIFODATAREG, &c_dev->buffer[i]);
         pr_info("%d\n", c_dev->buffer[i]);
         c_dev->buffer_len = i;
     }
