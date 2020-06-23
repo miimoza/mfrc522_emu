@@ -7,7 +7,7 @@
 ssize_t card_read(struct file *file, char __user *buf, size_t len,
                     loff_t *off /* unused */)
 {
-    pr_info("[READ]");
+    pr_info("[READ]\n");
 
     struct device *device;
     struct mfrc522_dev *mfrc522_dev;
