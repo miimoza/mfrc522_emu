@@ -1,4 +1,5 @@
 #include <linux/regmap.h>
+#include <linux/uaccess.h>
 
 #include "../mfrc522.h"
 #include "../mfrc522_emu.h"
@@ -9,29 +10,23 @@ ssize_t card_read(struct file *file, char __user *buf, size_t len,
 {
     pr_info("[READ]\n");
 
-    struct mfrc522_dev *mfrc522_dev = dev_to_mfrc522(mfrc522_find_dev());
-    struct regmap *regmap = mfrc522_get_regmap(mfrc522_dev);
-
-    /*
-    To read out data from a specific register address in the MFRC522,
-    the host controller must use the following procedure:
-    
-    •Firstly, a write access to the specific register address must be performed as indicated in the frame that follows
-    •The first byte of a frame indicates the device address according to the I2C-bus rules
-    •The second byte indicates the register address. No data bytes are added
-    •The Read/Write bit is 0
-
-    After the write access, read access can start. The host sends the device address of the MFRC522.
-    In response, the MFRC522 sends the content of the read access register.
-    In one frame all data bytes can be read from the same register address.
-    This enables fast FIFO buffer access or register polling.The Read/Write (R/W) bit is set to logic 1
-    */
 
 
 
-    unsigned int data;
-	regmap_read(regmap, MFRC522_FIFODATAREG, &data);
-	pr_info("Data: %s\n", data);
+    struct pingpong_dev *dev;
 
-    return 0;
+	pr_info("%s()\n", __func__);
+
+	dev = (struct pingpong_dev *)file->private_data;
+	if (cdev->buffer_len) {
+		if (copy_to_user(buf, cdev->buffer, cdev->buffer_len)) {
+			pr_err("Failed to copy data to user\n");
+			return -EFAULT;
+		}
+	}
+	else {
+		len = 0;
+	}
+
+	return len;
 }
