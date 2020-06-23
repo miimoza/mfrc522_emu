@@ -9,7 +9,8 @@
 #include <linux/uaccess.h>
 
 #include "gistre_card_fops.h"
-
+#include "mfrc522.h"
+#include "mfrc522_emu.h"
 
 #define MFRC522_NAME "mfrc522_emu"
 #define MFRC522_PROP MFRC522_PROP_VERSION
