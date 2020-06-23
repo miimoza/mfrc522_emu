@@ -7,6 +7,8 @@
 ssize_t card_read(struct file *file, char __user *buf, size_t len,
                     loff_t *off /* unused */)
 {
+    pr_info("[READ]")
+
     struct device *device;
     struct mfrc522_dev *mfrc522_dev;
     struct regmap *regmap;
@@ -14,6 +16,6 @@ ssize_t card_read(struct file *file, char __user *buf, size_t len,
     device = mfrc522_find_dev();
     mfrc522_dev = dev_to_mfrc522(device);
     regmap = mfrc522_get_regmap(mfrc522_dev);
-    //regmap_read(struct regmap *map, unsigned int reg, unsigned int *val);
+    regmap_read(struct regmap *map, unsigned int reg, unsigned int *val);
     return 0;
 }
