@@ -1,8 +1,9 @@
-#idndef CARD_H
+#ifndef CARD_H
 #define CARD_H
 
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <linux/cdev.h>
 
 #include "../mfrc522.h"
 

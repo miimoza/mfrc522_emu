@@ -1,4 +1,3 @@
-#include <linux/cdev.h>
 #include <linux/errno.h>
 #include <linux/of.h>
 
