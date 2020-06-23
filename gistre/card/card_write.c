@@ -2,8 +2,8 @@
 
 #include "../mfrc522.h"
 #include "../mfrc522_emu.h"
-#include "card_fops.h"
 #include "card.h"
+#include "card_fops.h"
 
 ssize_t card_write(struct file *file, const char __user *buf, size_t len,
                    loff_t *off /* unused */)
@@ -25,7 +25,7 @@ ssize_t card_write(struct file *file, const char __user *buf, size_t len,
 
     size_t i;
     for (i = 0; i < len; i++) {
-        pr_info("writting in MFRC522_FIFODATAREG: %d"\n", 97 + i);
+        pr_info("writting in MFRC522_FIFODATAREG: %d\n", 97 + i);
         regmap_write(regmap, MFRC522_FIFODATAREG, 97 + i);
     }
     pr_info("writting in MFRC522_FIFODATAREG: %d"\n", 0);
