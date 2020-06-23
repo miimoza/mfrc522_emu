@@ -3,8 +3,6 @@
 #include "card.h"
 #include "card_fops.h"
 
-int major;
-struct card_dev *cio_dev;
 
 static void card_destroy(struct card_dev *dev)
 {
