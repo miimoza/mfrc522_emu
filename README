@@ -1,7 +1,7 @@
 Dorian Vinai
 Antoine Coulon
 
-We wrote the gistre_card module in linux//gistre/card.
+We wrote the gistre_card module in linux/drivers/gistre/card.
 
 card
 |
