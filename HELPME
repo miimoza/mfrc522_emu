@@ -1,0 +1,42 @@
+# Register map
+
+MFRC522_CMDREG              0x01
+    starts and stops command execution
+
+MFRC522_CMDREG_CMD          0x0F
+    ?
+
+MFRC522_CMDREG_SOFTPWRDOWN  0x10
+    ?
+
+MFRC522_CMDREG_RCVOFF       0x20
+    ?
+
+MFRC522_FIFODATAREG         0x09
+    input and output of 64 byte FIFO buffer
+
+MFRC522_FIFOLEVELREG        0x0A
+    number of bytes stored in the FIFO buffer
+
+MFRC522_FIFOLEVELREG_LEVEL  0x7F
+    ?
+
+MFRC522_FIFOLEVELREG_FLUSH  0x80
+    ?
+
+# Command set
+MFRC522_IDLE                0x0
+    no action, cancels current command execution
+
+MFRC522_MEM                 0x1
+    stores 25 bytes into the internal buffer
+
+MFRC522_GENERATERANDOMID    0x2
+    generates a 10-byte random ID number
+
+MFRC522_NOCMDCHANGE         0x7
+    no command change, can be used to modify the CommandReg register bits
+    without affecting the command, for example, the PowerDown bit
+
+MFRC522_SOFTRESET           0xF
+    resets the MFRC522
