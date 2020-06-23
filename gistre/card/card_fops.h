@@ -5,7 +5,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 
-struct file_operations card_fops;
+extern struct file_operations card_fops;
 
 ssize_t card_read(struct file *file, char __user *buf, size_t len,
                     loff_t *off /* unused */);

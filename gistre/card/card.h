@@ -22,12 +22,13 @@ struct card_dev {
 };
 
 
+extern int major;
+extern struct card_dev *cio_dev;
+
 
 __init int card_init(void);
 __exit void card_exit(void);
 
-int major;
-struct card_dev *cio_dev;
 
 module_init(card_init);
 module_exit(card_exit);
