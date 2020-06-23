@@ -17,7 +17,14 @@ ssize_t card_write(struct file *file, const char __user *buf, size_t len,
     mfrc522_dev = dev_to_mfrc522(device);
     regmap = mfrc522_get_regmap(mfrc522_dev);
 
-    regmap_write(regmap, MFRC522_FIFODATAREG, 0);
+    regmap_write(regmap, MFRC522_CMDREG, MFRC522_MEM);
+    regmap_write(regmap, MFRC522_FIFOLEVELREG_FLUSH, 0x1);
+
+    for (size_t i = 0; i < 25; i++) {
+        regmap_write(regmap, MFRC522_FIFODATAREG, 97 + i)
+    }
+
+    regmap_write(regmap, MFRC522_CMDREG, MFRC522_IDLE);
 
     return 0;
 }
