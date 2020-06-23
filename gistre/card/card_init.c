@@ -18,6 +18,9 @@ static struct card_dev *card_create(void)
     dev->cdev.owner = THIS_MODULE;
     cdev_init(&dev->cdev, &card_fops);
 
+    dev->buffer[0] = '\0';
+    dev->buffer_len = 0;
+
     return dev;
 }
 
