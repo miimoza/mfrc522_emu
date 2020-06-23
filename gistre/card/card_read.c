@@ -20,6 +20,7 @@ ssize_t card_read(struct file *file, char __user *buf, size_t len,
 		}
 	}
 	else {
+        pr_info("%s():Nothing in the buffer\n", __func__);
 		len = 0;
 	}
 
