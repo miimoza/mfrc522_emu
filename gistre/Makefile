@@ -6,5 +6,9 @@ obj-$(CONFIG_MFRC522_EMU) += \
 	mfrc522_emu_drv.o
 
 obj-$(CONFIG_FOO) += \
-	gistre_card.o \
-	gistre_card_fops.o
+	card/card.o \
+	card/card_init.o \
+	card/card_exit.o \
+	card/card_fops.o \
+	card/card_read_op.o \
+	card/card_write_op.o
