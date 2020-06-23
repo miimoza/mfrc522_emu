@@ -14,7 +14,7 @@ __exit void card_exit(void)
     dev_t dev;
 
     dev = MKDEV(major, 0);
-    card_destroy(cio_dev);
+    card_destroy(c_dev);
     unregister_chrdev_region(dev, 1);
 
     pr_info("Goodbye, GISTRE card !\n");

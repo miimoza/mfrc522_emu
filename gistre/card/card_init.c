@@ -6,7 +6,7 @@
 #include "card_fops.h"
 
 int major;
-struct card_dev *cio_dev;
+struct card_dev *c_dev;
 
 static struct card_dev *card_create(void)
 {
@@ -43,13 +43,13 @@ __init int card_init(void)
     }
 
     /* Register char device */
-    cio_dev = card_create();
-    if (!cio_dev) {
+    c_dev = card_create();
+    if (!c_dev) {
         pr_err("Failed to init pingpong_dev\n");
         return -ENOMEM;
     }
 
-    if (cdev_add(&cio_dev->cdev, dev, 1) < 0) {
+    if (cdev_add(&c_dev->cdev, dev, 1) < 0) {
         pr_err("Failed to register char device\n");
         return -ENOMEM;
     }

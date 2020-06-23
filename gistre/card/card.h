@@ -24,7 +24,7 @@ struct card_dev {
 };
 
 extern int major;
-extern struct card_dev *cio_dev;
+extern struct card_dev *c_dev;
 
 __init int card_init(void);
 __exit void card_exit(void);
