@@ -16,6 +16,14 @@ ssize_t card_read(struct file *file, char __user *buf, size_t len,
     device = mfrc522_find_dev();
     mfrc522_dev = dev_to_mfrc522(device);
     regmap = mfrc522_get_regmap(mfrc522_dev);
-    regmap_read(struct regmap *map, unsigned int reg, unsigned int *val);
+
+    unsigned int reg = 0;
+    unsigned int *val;
+
+    regmap_read(regmap, reg, val);
+
+
+    pr_info("val: %s\n", val);
+
     return 0;
 }
