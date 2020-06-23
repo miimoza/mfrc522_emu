@@ -19,6 +19,7 @@ MODULE_LICENSE("GPL v2");
 
 struct card_dev {
     struct cdev cdev;
+    char buffer[64];
 };
 
 extern int major;
