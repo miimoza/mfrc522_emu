@@ -21,11 +21,18 @@ ssize_t card_write(struct file *file, const char __user *buf, size_t len,
     regmap_write(regmap, MFRC522_FIFOLEVELREG_FLUSH, 0x1);
 
     size_t i;
-    for (i = 0; i < 25; i++) {
+    for (i = 0; i < len; i++) {
         regmap_write(regmap, MFRC522_FIFODATAREG, 97 + i);
     }
+    regmap_write(regmap, MFRC522_FIFODATAREG, 0);
+
+    for (i = 0; i < len; i++) {
+        regmap_read(regmap, MFRC522_FIFODATAREG, c_dev->buffer[i]);
+        c_dev->buffer_len = i;
+    }
+    c_dev->buffer[i] = '\0';
 
     regmap_write(regmap, MFRC522_CMDREG, MFRC522_IDLE);
 
-    return 25;
+    return len;
 }
