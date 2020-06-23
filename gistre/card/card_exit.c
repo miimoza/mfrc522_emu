@@ -19,3 +19,5 @@ __exit void card_exit(void)
 
     pr_info("Goodbye, GISTRE card !\n");
 }
+
+module_exit(card_exit);

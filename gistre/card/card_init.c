@@ -68,3 +68,5 @@ __init int card_init(void)
 
     return 0;
 }
+
+module_init(card_init);
