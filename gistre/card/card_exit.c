@@ -1,3 +1,5 @@
+#include <linux/slab.h>
+
 #include "card.h"
 
 static void cardio_destroy(struct cardio_dev *dev)

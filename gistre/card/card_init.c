@@ -1,5 +1,6 @@
 #include <linux/errno.h>
 #include <linux/of.h>
+#include <linux/slab.h>
 
 #include "card.h"
 #include "card_fops.h"

@@ -5,6 +5,7 @@
 #include <linux/module.h>
 #include <linux/cdev.h>
 
+
 #include "../mfrc522.h"
 
 #define MFRC522_NAME "mfrc522_emu"
