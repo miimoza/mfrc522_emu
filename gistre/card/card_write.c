@@ -5,7 +5,7 @@
 #include "card_fops.h"
 
 ssize_t card_write(struct file *file, const char __user *buf, size_t len,
-                     loff_t *off /* unused */)
+                   loff_t *off /* unused */)
 {
     struct device *device;
     struct mfrc522_dev *mfrc522_dev;
