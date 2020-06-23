@@ -13,7 +13,7 @@ config MFRC522_EMU
       matter in any way when communicating with it.
 
 config GISTRE_CARD
-	bool "GISTRE Card"
+	bool "GISTRE card"
 	help
 	  A simple driver for the RFID MRFC522 Card Reader Device.
 
