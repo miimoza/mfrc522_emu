@@ -4,7 +4,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 
-#include "mfrc522.h"
+#include "../mfrc522.h"
 
 #define MFRC522_NAME "mfrc522_emu"
 #define MFRC522_PROP MFRC522_PROP_VERSION
