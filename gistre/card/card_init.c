@@ -5,26 +5,26 @@
 #include "card.h"
 #include "card_fops.h"
 
-static struct cardio_dev *cardio_create(void)
+static struct card_dev *card_create(void)
 {
-    struct cardio_dev *dev = kmalloc(sizeof(*dev), GFP_KERNEL);
+    struct card_dev *dev = kmalloc(sizeof(*dev), GFP_KERNEL);
     if (!dev) {
         return NULL;
     }
 
     dev->cdev.owner = THIS_MODULE;
-    cdev_init(&dev->cdev, &cardio_fops);
+    cdev_init(&dev->cdev, &card_fops);
 
     return dev;
 }
 
-__init int cardio_init(void)
+__init int card_init(void)
 {
     pr_info("Hello, GISTRE card !\n");
 
     dev_t dev;
     int ret;
-    const char devname[] = "cardio";
+    const char devname[] = "card";
 
     /* Allocate major */
     ret = alloc_chrdev_region(&dev, 0, 1, devname);
@@ -37,7 +37,7 @@ __init int cardio_init(void)
     }
 
     /* Register char device */
-    cio_dev = cardio_create();
+    cio_dev = card_create();
     if (!cio_dev) {
         pr_err("Failed to init pingpong_dev\n");
         return -ENOMEM;

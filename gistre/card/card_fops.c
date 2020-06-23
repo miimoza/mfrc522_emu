@@ -1,8 +1,8 @@
 #include "card_fops.h"
 
-struct file_operations cardio_fops = {
+struct file_operations card_fops = {
     .owner = THIS_MODULE,
-    .read = cardio_read,
-    .write = cardio_write
+    .read = card_read,
+    .write = card_write
     /* Others functions are using the kernel's defaults */
 };

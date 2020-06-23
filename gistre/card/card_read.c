@@ -4,7 +4,7 @@
 #include "../mfrc522_emu.h"
 #include "card_fops.h"
 
-ssize_t cardio_read(struct file *file, char __user *buf, size_t len,
+ssize_t card_read(struct file *file, char __user *buf, size_t len,
                     loff_t *off /* unused */)
 {
     struct device *device;

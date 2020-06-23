@@ -11,14 +11,14 @@
 #define MFRC522_NAME "mfrc522_emu"
 #define MFRC522_PROP MFRC522_PROP_VERSION
 
-struct cardio_dev {
+struct card_dev {
     struct cdev cdev;
 };
 
-__init int cardio_init(void);
-__exit void cardio_exit(void);
+__init int card_init(void);
+__exit void card_exit(void);
 
 int major;
-struct cardio_dev *cio_dev;
+struct card_dev *cio_dev;
 
 #endif

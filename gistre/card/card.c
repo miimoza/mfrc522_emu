@@ -7,5 +7,5 @@ MODULE_AUTHOR("Caproute <cap.route@freemail.bcd>");
 MODULE_LICENSE("GPL v2");
 
 // Init & Exit
-module_init(cardio_init);
-module_exit(cardio_exit);
+module_init(card_init);
+module_exit(card_exit);

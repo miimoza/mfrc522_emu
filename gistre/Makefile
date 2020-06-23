@@ -10,5 +10,5 @@ obj-$(CONFIG_FOO) += \
 	card/card_init.o \
 	card/card_exit.o \
 	card/card_fops.o \
-	card/card_read_op.o \
-	card/card_write_op.o
+	card/card_read.o \
+	card/card_write.o
