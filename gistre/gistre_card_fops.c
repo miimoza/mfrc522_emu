@@ -1,4 +1,6 @@
 #include "gistre_card_fops.h"
+#include "mfrc522.h"
+#include "mfrc522_emu.h"
 
 struct file_operations cardio_fops = {
     .owner = THIS_MODULE,
