@@ -23,8 +23,10 @@ static ssize_t atoi(char *string)
     return result;
 }
 
-static void mem_read_parser(struct regmap *regmap, char *buf, size_t len)
+static void mem_write_parser(struct regmap *regmap, char *buf, size_t len)
 {
+    pr_info("%s()\n", __func__);
+
     size_t buflen_size = 0;
     for (; buf[buflen_size + 10] != '\0' && buf[buflen_size + 10] != ':'; buflen_size++);
     if (buflen_size == 0)
@@ -56,7 +58,7 @@ ssize_t card_write(struct file *file, const char __user *buf, size_t len,
 
 
     if (len >= 10 && strncmp(buf, "mem_write:", 10))
-        mem_read_parser(regmap, buf, len);
+        mem_write_parser(regmap, buf, len);
     else if (len == 8 && strncmp(buf, "mem_read", 8))
         mem_read(regmap);
     else if (len == 11 && strncmp(buf, "gen_rand_id", 11))
