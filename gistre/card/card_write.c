@@ -8,7 +8,7 @@
 #include "card_fops.h"
 
 
-static void mem_read_parser(regmap, buf)
+static void mem_read_parser(struct regmap *regmap, char *buf)
 {
     size_t buflen_size = 0;
     for (; buf[buflen_size + 10] != '\0' && buf[buflen_size + 10] != ':'; buflen_size++);
