@@ -8,11 +8,11 @@ void mem_write(struct regmap *regmap, const char __user *buf, size_t len)
 
     size_t i;
     for (i = 0; i < len; i++) {
-        pr_info("writting in MFRC522_FIFODATAREG: %d\n", 97 + i);
-        regmap_write(regmap, MFRC522_FIFODATAREG, 97 + i);
+        pr_info("writting in MFRC522_FIFODATAREG: %d\n", buf[i]);
+        regmap_write(regmap, MFRC522_FIFODATAREG, buf[i]);
     }
-    pr_info("writting in MFRC522_FIFODATAREG: %d\n", 0);
-    regmap_write(regmap, MFRC522_FIFODATAREG, 0);
+    //pr_info("writting in MFRC522_FIFODATAREG: %d\n", 0);
+    //regmap_write(regmap, MFRC522_FIFODATAREG, 0);
 
     regmap_write(regmap, MFRC522_CMDREG, MFRC522_IDLE);
 }
