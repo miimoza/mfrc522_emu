@@ -69,7 +69,7 @@ ssize_t card_write(struct file *file, const char __user *buf, size_t len,
     if (len >= 13 && !strncmp(cmd, "mem_write:", 10))
         mem_write_parser(regmap, cmd, len);
     else if (len == 8 && !strncmp(cmd, "mem_read", 8))
-        mem_read(regmap);
+        len = mem_read(regmap);
     else if (len == 11 && !strncmp(cmd, "gen_rand_id", 11))
         gen_rand_id(regmap);
     else
