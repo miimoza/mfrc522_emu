@@ -57,11 +57,11 @@ ssize_t card_write(struct file *file, const char __user *buf, size_t len,
     regmap = mfrc522_get_regmap(dev_to_mfrc522(mfrc522_find_dev()));
 
 
-    if (len >= 10 && strncmp(buf, "mem_write:", 10))
+    if (len >= 11 && strncmp(buf, "mem_write:", 10))
         mem_write_parser(regmap, buf, len);
-    else if (len == 8 && strncmp(buf, "mem_read", 8))
+    else if (len == 9 && strncmp(buf, "mem_read", 8))
         mem_read(regmap);
-    else if (len == 11 && strncmp(buf, "gen_rand_id", 11))
+    else if (len == 12 && strncmp(buf, "gen_rand_id", 11))
         gen_rand_id(regmap);
     else
         pr_info("ca match po lau\n");
