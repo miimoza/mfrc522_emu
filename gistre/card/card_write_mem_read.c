@@ -4,7 +4,9 @@ ssize_t mem_read(struct regmap *regmap)
 {
     unsigned int len;
 
-    regmap_write(regmap, MFRC522_CMDREG, MFRC522_MEM);
+    regmap_write(regmap, MFRC522_CMDREG, MFRC522_IDLE);
+
+    //regmap_write(regmap, MFRC522_CMDREG, MFRC522_MEM);
     regmap_read(regmap, MFRC522_FIFOLEVELREG_LEVEL, &len);
 
 
