@@ -11,9 +11,8 @@ struct card_dev *c_dev;
 static struct card_dev *card_create(void)
 {
     struct card_dev *dev = kmalloc(sizeof(*dev), GFP_KERNEL);
-    if (!dev) {
+    if (!dev)
         return NULL;
-    }
 
     dev->cdev.owner = THIS_MODULE;
     cdev_init(&dev->cdev, &card_fops);
