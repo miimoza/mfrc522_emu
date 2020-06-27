@@ -1,6 +1,5 @@
 #include <linux/regmap.h>
 #include <linux/string.h>
-#include <stdlib.h>
 
 #include "../mfrc522.h"
 #include "../mfrc522_emu.h"
@@ -8,6 +7,21 @@
 #include "card.h"
 #include "card_fops.h"
 
+static ssize_t atoi(char *string)
+{
+    int result = 0;
+    unsigned int digit;
+
+    for (;; string += 1) {
+        digit = *string - '0';
+        if (digit > 9) {
+            return -1;
+        }
+        result = (10 * result) + digit;
+    }
+
+    return result;
+}
 
 static void mem_read_parser(struct regmap *regmap, char *buf)
 {
@@ -20,6 +34,9 @@ static void mem_read_parser(struct regmap *regmap, char *buf)
     memcpy(buflen_str, &buf[10], buflen_size - 1);
     buflen_str[buflen_size - 1] = '\0';
     size_t buflen = atoi(buflen_str);
+    if (buflen == -1)
+        return 0;
+
 
     if (buf_size >= 10 + buflen_size + 1 && buf[10 + buflen_size] == ':')
     {
