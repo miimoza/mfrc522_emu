@@ -1,5 +1,4 @@
 #include <linux/regmap.h>
-#include <linux/string.h>
 
 #include "../mfrc522.h"
 #include "../mfrc522_emu.h"
@@ -22,6 +21,46 @@ static ssize_t atoi(char *string)
 
     return result;
 }
+
+int strncmp(const char *s1, const char *s2, size_t n)
+{
+    unsigned char c1 = '\0';
+    unsigned char c2 = '\0';
+    if (n >= 4)
+      {
+        size_t n4 = n >> 2;
+        do
+          {
+            c1 = (unsigned char) *s1++;
+            c2 = (unsigned char) *s2++;
+            if (c1 == '\0' || c1 != c2)
+              return c1 - c2;
+            c1 = (unsigned char) *s1++;
+            c2 = (unsigned char) *s2++;
+            if (c1 == '\0' || c1 != c2)
+              return c1 - c2;
+            c1 = (unsigned char) *s1++;
+            c2 = (unsigned char) *s2++;
+            if (c1 == '\0' || c1 != c2)
+              return c1 - c2;
+            c1 = (unsigned char) *s1++;
+            c2 = (unsigned char) *s2++;
+            if (c1 == '\0' || c1 != c2)
+              return c1 - c2;
+          } while (--n4 > 0);
+        n &= 3;
+      }
+    while (n > 0)
+      {
+        c1 = (unsigned char) *s1++;
+        c2 = (unsigned char) *s2++;
+        if (c1 == '\0' || c1 != c2)
+          return c1 - c2;
+        n--;
+      }
+    return c1 - c2;
+}
+
 
 static void mem_write_parser(struct regmap *regmap, char *buf, size_t len)
 {
@@ -59,9 +98,9 @@ ssize_t card_write(struct file *file, const char __user *buf, size_t len,
 
     if (len >= 14 && strncmp(buf, "mem_write:", 10) == 0)
         mem_write_parser(regmap, buf, len);
-    else if (len == 9)
+    else if (len == 9 && strncmp(buf, "mem_read", 8) == 0)
         mem_read(regmap);
-    else if (len == 12)
+    else if (len == 12 && strncmp(buf, "gen_rand_id", 11) == 0)
         gen_rand_id(regmap);
     else
         pr_info("ca match po lau\n");
