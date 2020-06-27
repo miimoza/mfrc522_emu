@@ -1,6 +1,6 @@
 #include "card_write_funcs.h"
 
-void mem_read(struct regmap *regmap)
+ssize_t mem_read(struct regmap *regmap)
 {
     pr_info("%s\n", __func__);
     unsigned int len;
@@ -16,5 +16,7 @@ void mem_read(struct regmap *regmap)
     }
     c_dev->buffer[i] = '\0';
 
+    regmap_write(regmap, MFRC522_FIFOLEVELREG_FLUSH, 0x1);
     regmap_write(regmap, MFRC522_CMDREG, MFRC522_IDLE);
+    return len;
 }
