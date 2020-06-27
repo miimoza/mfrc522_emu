@@ -59,9 +59,9 @@ ssize_t card_write(struct file *file, const char __user *buf, size_t len,
 
     if (len >= 14 && strncmp(buf, "mem_write:", 10) == 0)
         mem_write_parser(regmap, buf, len);
-    else if (len == 9 && strncmp(buf, "mem_read", 9) == 0)
+    else if (len == 9)
         mem_read(regmap);
-    else if (len == 12 && strncmp(buf, "gen_rand_id", 12) == 0)
+    else if (len == 12)
         gen_rand_id(regmap);
     else
         pr_info("ca match po lau\n");
