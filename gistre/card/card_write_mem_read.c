@@ -5,6 +5,7 @@ ssize_t mem_read(struct regmap *regmap)
     pr_info("%s\n", __func__);
     unsigned int len;
 
+    regmap_write(regmap, MFRC522_CMDREG, MFRC522_MEM);
     regmap_read(regmap, MFRC522_FIFOLEVELREG_LEVEL, &len);
 
     size_t i;
@@ -14,9 +15,8 @@ ssize_t mem_read(struct regmap *regmap)
         pr_info("%d\n", c_dev->buffer[i]);
         c_dev->buffer_len = i;
     }
-    c_dev->buffer[i] = '\0';
+    //c_dev->buffer[i] = '\0';
 
-    regmap_write(regmap, MFRC522_FIFOLEVELREG_FLUSH, 0x1);
     regmap_write(regmap, MFRC522_CMDREG, MFRC522_IDLE);
     return len;
 }
