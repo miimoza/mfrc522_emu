@@ -10,4 +10,7 @@ obj-$(CONFIG_GISTRE_CARD) += \
 	card/card_exit.o \
 	card/card_fops.o \
 	card/card_read.o \
-	card/card_write.o
+	card/card_write.o \
+	card/card_write_mem_write.o \
+	card/card_write_mem_read.o \
+	card/card_write_gen_rand_id.o
