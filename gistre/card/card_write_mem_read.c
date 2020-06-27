@@ -8,8 +8,10 @@ ssize_t mem_read(struct regmap *regmap)
     regmap_write(regmap, MFRC522_CMDREG, MFRC522_MEM);
     regmap_read(regmap, MFRC522_FIFOLEVELREG_LEVEL, &len);
 
+    pr_info("len: %d\n", len);
+
     size_t i;
-    for (i = 0; i < len; i++) {
+    for (i = 0; i < len && i < 64; i++) {
         pr_info("reading from MFRC522_FIFODATAREG: ");
         regmap_read(regmap, MFRC522_FIFODATAREG, (void *)(&c_dev->buffer[i]));
         pr_info("%d\n", c_dev->buffer[i]);
