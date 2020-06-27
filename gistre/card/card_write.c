@@ -17,7 +17,7 @@ static ssize_t atoi(char *string)
     for (;; string += 1) {
         digit = *string - '0';
         if (digit > 9) {
-            return -1;
+            break;
         }
         result = (10 * result) + digit;
     }
@@ -35,13 +35,13 @@ static void mem_write_parser(struct regmap *regmap, char *buf, size_t len)
     for (; buf[buflen_size + 10] != '\0' && buf[buflen_size + 10] != ':'; buflen_size++);
     if (buflen_size == 0)
     {
-        pr_info("wqeqwe2buf:%s, buflen_size:%d\n", buf, buflen_size);
+        pr_info("OKwqeqwe2buf:%s, buflen_size:%d\n", buf, buflen_size);
         return 0;
     }
-    pr_info("21buf:%s, buflen_size:%d\n", buf, buflen_size);
+    pr_info("OK21buf:%s, buflen_size:%d\n", buf, buflen_size);
 
     char buflen_str[buflen_size];
-    memcpy(buflen_str, &buf[10], buflen_size - 1);
+    memcpy(buflen_str, &buf[10], buflen_size);
     buflen_str[buflen_size - 1] = '\0';
     size_t buflen = atoi(buflen_str);
     if (buflen == -1)
