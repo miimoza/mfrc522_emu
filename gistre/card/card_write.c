@@ -35,16 +35,21 @@ static void mem_write_parser(struct regmap *regmap, char *buf, size_t len)
     for (; buf[buflen_size + 10] != '\0' && buf[buflen_size + 10] != ':'; buflen_size++);
     if (buflen_size == 0)
     {
-        pr_info("2buf:%s, buflen_size:%d\n", buf, buflen_size);
+        pr_info("wqeqwe2buf:%s, buflen_size:%d\n", buf, buflen_size);
         return 0;
     }
+    pr_info("21buf:%s, buflen_size:%d\n", buf, buflen_size);
 
     char buflen_str[buflen_size];
     memcpy(buflen_str, &buf[10], buflen_size - 1);
     buflen_str[buflen_size - 1] = '\0';
     size_t buflen = atoi(buflen_str);
     if (buflen == -1)
+    {
+        pr_info("3434buf:%s, buflen_size:%d, buflen_str:%s, buflen:%d, data:%s\n", buf, buflen_size, buflen_str, buflen, buf + 10 + buflen_size + 1);
         return 0;
+    }
+
 
     pr_info("2buf:%s, buflen_size:%d, buflen_str:%s, buflen:%d, data:%s\n", buf, buflen_size, buflen_str, buflen, buf + 10 + buflen_size + 1);
     if (len >= 10 + buflen_size + 1 && buf[10 + buflen_size] == ':')
