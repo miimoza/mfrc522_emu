@@ -34,7 +34,7 @@ __init int card_init(void)
     /* Allocate major */
     ret = alloc_chrdev_region(&dev, 0, 1, devname);
     if (ret < 0) {
-        pr_info("Failed to allocate major\n");
+        pr_err("Failed to allocate major\n");
         return 1;
     } else {
         major = MAJOR(dev);
