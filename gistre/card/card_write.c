@@ -34,7 +34,10 @@ static void mem_write_parser(struct regmap *regmap, char *buf, size_t len)
     size_t buflen_size = 0;
     for (; buf[buflen_size + 10] != '\0' && buf[buflen_size + 10] != ':'; buflen_size++);
     if (buflen_size == 0)
+    {
+        pr_info("2buf:%s, buflen_size:%d\n", buf, buflen_size);
         return 0;
+    }
 
     char buflen_str[buflen_size];
     memcpy(buflen_str, &buf[10], buflen_size - 1);
@@ -43,10 +46,10 @@ static void mem_write_parser(struct regmap *regmap, char *buf, size_t len)
     if (buflen == -1)
         return 0;
 
-
+    pr_info("2buf:%s, buflen_size:%d, buflen_str:%s, buflen:%d, data:%s\n", buf, buflen_size, buflen_str, buflen, buf + 10 + buflen_size + 1);
     if (len >= 10 + buflen_size + 1 && buf[10 + buflen_size] == ':')
     {
-        pr_info("buf:%s, buflen_size:%d, buflen_str:%s, buflen:%d, data:%s\n", buf, buflen_size, buflen_str, buflen, buf + 10 + buflen_size + 1);
+        pr_info("3buf:%s, buflen_size:%d, buflen_str:%s, buflen:%d, data:%s\n", buf, buflen_size, buflen_str, buflen, buf + 10 + buflen_size + 1);
         mem_write(regmap, buf + 10 + buflen_size + 1, buflen);
     }
 }
@@ -66,7 +69,7 @@ ssize_t card_write(struct file *file, const char __user *buf, size_t len,
 
 
     pr_info("buf:%s\n", cmd);
-    if (len >= 13 && !strncmp(cmd, "mem_write:", 10))
+    if (len >= 12 && !strncmp(cmd, "mem_write:", 10))
         mem_write_parser(regmap, cmd, len);
     else if (len == 8 && !strncmp(cmd, "mem_read", 8))
         len = mem_read(regmap);
