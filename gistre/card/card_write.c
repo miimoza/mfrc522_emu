@@ -41,9 +41,9 @@ static void mem_write_parser(struct regmap *regmap, char *buf, size_t len)
     pr_info("OK21buf:%s, buflen_size:%d\n", buf, buflen_size);
 
     char buflen_str[buflen_size + 1];
-    strncpy(buflen_str, &buf[10], buflen_size)
+    strncpy(buflen_str, &buf[10], buflen_size);
 
-    size_t buflen = atoi(buflen_str);
+    ssize_t buflen = atoi(buflen_str);
     if (buflen == -1)
     {
         pr_info("3434buf:%s, buflen_size:%d, buflen_str:%s, buflen:%d, data:%s\n", buf, buflen_size, buflen_str, buflen, buf + 10 + buflen_size + 1);
