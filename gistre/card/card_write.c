@@ -3,6 +3,7 @@
 
 #include "../mfrc522.h"
 #include "../mfrc522_emu.h"
+#include "card_write_funcs.h"
 #include "card.h"
 #include "card_fops.h"
 
