@@ -42,6 +42,7 @@ static void mem_write_parser(struct regmap *regmap, char *buf, size_t len)
 
     char buflen_str[buflen_size + 1];
     strncpy(buflen_str, &buf[10], buflen_size);
+    buflen_str[buflen_size] = '\0';
 
     ssize_t buflen = atoi(buflen_str);
     if (buflen == -1)

@@ -11,7 +11,7 @@ ssize_t card_read(struct file *file, char __user *buf, size_t len,
 {
 	pr_info("%s(): len -> %ld\n", __func__, len);
 
-
+    pr_info("In c_dev->buffer:%s\n", c_dev->buffer);
 
 	if (c_dev->buffer_len) {
         len = min(len, c_dev->buffer_len);
