@@ -37,11 +37,11 @@ ssize_t card_write(struct file *file, const char __user *buf, size_t len,
 
     size_t buf_size = strlen(buf);
 
-    if (buf_size >= 10 && strncmp(buf, "mem_write:"))
+    if (buf_size >= 10 && strncmp(buf, "mem_write:", 10))
         mem_read_parser(regmap, buf);
-    else if (buf_size == 8 && strncmp(buf, "mem_read"))
+    else if (buf_size == 8 && strncmp(buf, "mem_read", 8))
         mem_read(regmap);
-    else if (buf_size == 11 && strncmp(buf, "gen_rand_id"))
+    else if (buf_size == 11 && strncmp(buf, "gen_rand_id", 11))
         gen_rand_id(regmap);
     else
         pr_info("ca match po lau\n");
