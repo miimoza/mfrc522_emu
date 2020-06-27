@@ -45,7 +45,7 @@ static void mem_write_parser(struct regmap *regmap, char *buf, size_t len)
     if (buflen == -1)
     {
         pr_err("Buffer Len not a digit\n");
-        return ;
+        return;
     }
 
     char *data = buf + 10 + buflen_size + 1;
@@ -55,15 +55,10 @@ static void mem_write_parser(struct regmap *regmap, char *buf, size_t len)
         data_len[64] = '\0';
 
     regmap_write(regmap, MFRC522_FIFOLEVELREG_FLUSH, 0x1);
-
     if (len >= 10 + buflen_size + 1 && buf[10 + buflen_size] == ':')
-    {
         mem_write(regmap, buf + 10 + buflen_size + 1, buflen);
-        mem_write(regmap, buf + 10 + buflen_size + 1, buflen);
-    }
     else
         pr_err("Command Parsing Error\n");
-
 }
 
 

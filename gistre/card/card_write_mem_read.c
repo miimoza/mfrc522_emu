@@ -7,22 +7,6 @@ ssize_t mem_read(struct regmap *regmap)
     regmap_write(regmap, MFRC522_CMDREG, MFRC522_MEM);
     regmap_read(regmap, MFRC522_FIFOLEVELREG_LEVEL, &len);
 
-    pr_info("len: %u\n", len);
-    pr_info("len: %u\n", len);
-    pr_info("len: %u\n", len);
-    pr_info("len: %u\n", len);
-    pr_info("len: %u\n", len);
-    pr_info("len: %u\n", len);
-    pr_info("len: %u\n", len);
-    pr_info("len: %u\n", len);
-    pr_info("len: %u\n", len);
-    pr_info("len: %u\n", len);
-    pr_info("len: %u\n", len);
-    pr_info("len: %u\n", len);
-    pr_info("len: %u\n", len);
-    pr_info("len: %u\n", len);
-    
-
     size_t i;
     for (i = 0; i < 25; i++)
         regmap_read(regmap, MFRC522_FIFODATAREG, (void *)(&c_dev->buffer[i]));
