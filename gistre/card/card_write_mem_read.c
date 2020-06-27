@@ -16,7 +16,7 @@ ssize_t mem_read(struct regmap *regmap)
             break;
     }
 
-    regmap_write(regmap, MFRC522_CMDREG, MFRC522_IDLE);
+    //regmap_write(regmap, MFRC522_CMDREG, MFRC522_IDLE);
 
     return len;
 }
