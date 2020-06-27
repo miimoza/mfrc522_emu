@@ -12,7 +12,7 @@ static void mem_read_parser(struct regmap *regmap, char *buf)
 {
     size_t buflen_size = 0;
     for (; buf[buflen_size + 10] != '\0' && buf[buflen_size + 10] != ':'; buflen_size++);
-    if (i == 0)
+    if (buflen_size == 0)
         return 0;
 
     char buflen_str[buflen_size];
