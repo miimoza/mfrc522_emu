@@ -10,5 +10,5 @@ void mem_write(struct regmap *regmap, const char __user *buf, size_t len)
     for (i = 0; i < len; i++)
         regmap_write(regmap, MFRC522_FIFODATAREG, buf[i]);
 
-    //regmap_write(regmap, MFRC522_CMDREG, MFRC522_IDLE);
+    regmap_write(regmap, MFRC522_CMDREG, MFRC522_IDLE);
 }
