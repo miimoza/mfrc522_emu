@@ -7,6 +7,7 @@ void mem_read(struct regmap *regmap)
 
     regmap_read(regmap, MFRC522_FIFOLEVELREG_LEVEL, &len);
 
+    size_t i;
     for (i = 0; i < len; i++) {
         pr_info("reading from MFRC522_FIFODATAREG: ");
         regmap_read(regmap, MFRC522_FIFODATAREG, (void *)(&c_dev->buffer[i]));
