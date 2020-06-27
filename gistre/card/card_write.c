@@ -1,6 +1,7 @@
 #include <linux/regmap.h>
 #include <linux/string.h>
 #include <linux/slab.h>
+#include <linux/uaccess.h>
 
 #include "../mfrc522.h"
 #include "../mfrc522_emu.h"
@@ -59,7 +60,7 @@ ssize_t card_write(struct file *file, const char __user *buf, size_t len,
     struct regmap *regmap;
     regmap = mfrc522_get_regmap(dev_to_mfrc522(mfrc522_find_dev()));
 
-    char *cmd = kmalloc(len);
+    char *cmd = kmalloc(len, GFP_KERNEL);
     copy_from_user(cmd, buf, len);
 
 
