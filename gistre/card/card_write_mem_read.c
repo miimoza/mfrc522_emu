@@ -18,6 +18,7 @@ ssize_t mem_read(struct regmap *regmap)
         c_dev->buffer_len = i;
     }
     c_dev->buffer[i] = '\0';
+    pr_info("Store %s in c_dev->buffer\n", c_dev->buffer);
 
     regmap_write(regmap, MFRC522_CMDREG, MFRC522_IDLE);
     return len;
