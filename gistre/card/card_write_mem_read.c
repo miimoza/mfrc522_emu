@@ -8,6 +8,8 @@ ssize_t mem_read(struct regmap *regmap)
     regmap_write(regmap, MFRC522_CMDREG, MFRC522_MEM);
     regmap_read(regmap, MFRC522_FIFOLEVELREG_LEVEL, &len);
 
+    len &= 0x7F;
+
     pr_info("len: %u\n", len);
 
     size_t i;
