@@ -1,6 +1,6 @@
 #include <linux/regmap.h>
 #include <linux/string.h>
-#include <linux/kernel.h>
+#include <linux/slab.h>
 
 #include "../mfrc522.h"
 #include "../mfrc522_emu.h"
