@@ -1,16 +1,42 @@
-Dorian Vinai
-Antoine Coulon
+# GISTRE CARD
 
-We wrote the gistre_card module in linux/drivers/gistre/card.
+- [X] Palier 0
+    - Welcome to GISTRE Linux !
+- [X] Palier 1
+    - We wrote the gistre card module in `linux/drivers/gistre/card`
+    - Displays "Hello, GISTRE card !" when initializing,
+    - Displays the value of `version` from the device tree using `linux/of.h`
+    - Displays "Goodbye, GISTRE card !" when exiting.
+- [X] Palier 2
+    - `mem_write:<len>:<data>`
+    - `mem_read`
+- [X] Palier 3
+    - `gen_rand_id`
+- [ ] Bonus 0
+- [ ] Bonus 1
+- [ ] Bonus 2
+- [ ] Bonus 3
+- [ ] Bonus N
 
-card
+## AUTHORS
+- Antoine Coulon
+- Dorian Vinai
+
+## PROJECT TREE
+```
+linux/drivers/gistre/card
 |
-|-- card.h
-|-- card_fops.h
-
-|-- card_init.c
-|-- card_exit.c
-
-|-- card_write.c
-|-- card_read.c
-|-- card_
+|-- card.h ------------------- METADATA + INIT/EXIT
+|-- card_init.c -------------- init implementation
+|-- card_exit.c -------------- exit implementation
+|
+|-- card_fops.h -------------- FILE OPERATIONS
+|-- card_fops.c -------------- file operations declaration
+|-- card_read.c -------------- read implementation
+|-- card_write.c ------------- write implementation
+|
+|-- card_write_funcs.h ------- WRITE OPERATION COMMANDS
+|-- card_write_mem_read.c ---- mem_read implementation
+|-- card_write_mem_write.c --- mem_write implementation
+|-- card_write_gen_rand_id.c - gen_rand_id implementation
+```
