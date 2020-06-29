@@ -92,8 +92,12 @@ ssize_t card_write(struct file *file, const char __user *buf, size_t len,
 		mem_read(regmap);
 	else if (len == 11 && !strncmp(cmd, "gen_rand_id", 11))
 		gen_rand_id(regmap);
+	else if (len == 8 && !strcmp(cmd, "debug:on"))
+		c_dev->debug = true;
+	else if (len == 9 && !strcmp(cmd, "debug:off"))
+		c_dev->debug = false;
 	else
-		pr_err("Unknown Command\n");
+		pr_err("Invalid Command %s\n", cmd);
 
 	kfree(cmd);
 
