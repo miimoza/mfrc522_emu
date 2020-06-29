@@ -12,15 +12,15 @@
 
 // Metadata
 MODULE_DESCRIPTION(
-    "CARD DRIVER MRFC522: RFID RC522, Module MFRC-522 RF IC RFID S50 13.56MHz");
+	"CARD DRIVER MRFC522: RFID RC522, Module MFRC-522 RF IC RFID S50 13.56MHz");
 MODULE_AUTHOR(
-    "Dorian Vinai <dorian.vinai@epita.fr>, Antoine Coulon <antoine.coulon@epita.fr>");
+	"Dorian Vinai <dorian.vinai@epita.fr>, Antoine Coulon <antoine.coulon@epita.fr>");
 MODULE_LICENSE("GPL v2");
 
 struct card_dev {
-    struct cdev cdev;
-    char buffer[64];
-    size_t buffer_len;
+	struct cdev cdev;
+	char buffer[64];
+	size_t buffer_len;
 };
 
 extern int major;

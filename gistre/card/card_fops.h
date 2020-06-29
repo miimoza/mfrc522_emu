@@ -8,9 +8,9 @@
 extern struct file_operations card_fops;
 
 ssize_t card_read(struct file *file, char __user *buf, size_t len,
-                  loff_t *off /* unused */);
+		  loff_t *off /* unused */);
 
 ssize_t card_write(struct file *file, const char __user *buf, size_t len,
-                   loff_t *off /* unused */);
+		   loff_t *off /* unused */);
 
 #endif /* CARD_FOPS_H */
