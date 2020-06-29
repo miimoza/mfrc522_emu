@@ -4,6 +4,7 @@
 #include <linux/cdev.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <stdbool.h>
 
 #include "../mfrc522.h"
 
@@ -21,6 +22,7 @@ struct card_dev {
 	struct cdev cdev;
 	char buffer[64];
 	size_t buffer_len;
+	bool debug;
 };
 
 extern int major;

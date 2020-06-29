@@ -20,16 +20,20 @@ static struct card_dev *card_create(void)
 	dev->buffer[0] = '\0';
 	dev->buffer_len = 0;
 
+	dev->debug = false;
+
 	return dev;
 }
 
 __init int card_init(void)
 {
-	pr_info("Hello, GISTRE card !\n");
-
+	const char devname[] = "gistre_card";
+	struct device_node *device_node;
 	dev_t dev;
 	int ret;
-	const char devname[] = "card";
+	u32 version;
+
+	pr_info("Hello, GISTRE card !\n");
 
 	/* Allocate major */
 	ret = alloc_chrdev_region(&dev, 0, 1, devname);
@@ -53,14 +57,12 @@ __init int card_init(void)
 		return -ENOMEM;
 	}
 
-	struct device_node *device_node;
 	device_node = of_find_node_by_name(of_root, MFRC522_NAME);
 	if (!device_node) {
 		pr_err("%s: Did not find node %s...\n", __func__, MFRC522_NAME);
 		return 1;
 	}
 
-	u32 version;
 	if (of_property_read_u32(device_node, MFRC522_PROP, &version)) {
 		pr_err("%s: Did not find property \"%s\"\n", __func__,
 		       MFRC522_PROP);
