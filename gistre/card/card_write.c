@@ -52,7 +52,7 @@ static void mem_write_parser(struct regmap *regmap, char *buf, size_t len)
     size_t data_len = strlen(data);
 
     if (data_len > 64)
-        data_len[64] = '\0';
+        data[64] = '\0';
 
     regmap_write(regmap, MFRC522_FIFOLEVELREG_FLUSH, 0x1);
     if (len >= 10 + buflen_size + 1 && buf[10 + buflen_size] == ':')
