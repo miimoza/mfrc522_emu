@@ -49,8 +49,10 @@ static void mem_write_parser(struct regmap *regmap, char *buf, size_t len)
 	char *data = buf + 10 + buflen_size + 1;
 	size_t data_len = strlen(data);
 
-	if (data_len > 64)
-		data[64] = '\0';
+	if (data_len > 25) {
+		data[25] = '\0';
+		data_len = 25;
+	}
 
 	regmap_write(regmap, MFRC522_FIFOLEVELREG_FLUSH, 0x1);
 	if (len >= 10 + buflen_size + 1 && buf[10 + buflen_size] == ':')
@@ -72,7 +74,7 @@ ssize_t card_write(struct file *file, const char __user *buf, size_t len,
 	if (len >= 12 && !strncmp(cmd, "mem_write:", 10))
 		mem_write_parser(regmap, cmd, len);
 	else if (len == 8 && !strncmp(cmd, "mem_read", 8))
-		len = mem_read(regmap);
+		mem_read(regmap);
 	else if (len == 11 && !strncmp(cmd, "gen_rand_id", 11))
 		gen_rand_id(regmap);
 	else
