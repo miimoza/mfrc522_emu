@@ -1,8 +1,34 @@
-commit dc124aca92ec58fbe9f4e10f604300a6f2ec8aa3
-Author: Dorian Vinai <dorian.vinai@epita.fr>
-Date:   Tue Jun 30 19:52:17 2020 +0200
+From 83d450386ee05cd9488d01b12ebcbe3553654f9d Mon Sep 17 00:00:00 2001
+From: Dorian Vinai <dorian.vinai@epita.fr>
+Date: Tue, 30 Jun 2020 20:08:32 +0200
+Subject: [PATCH] Implemented MFRC522 driver
 
-    Implemented MFRC522 driver
+---
+ drivers/gistre/Kconfig                       |   5 +
+ drivers/gistre/Makefile                      |  10 ++
+ drivers/gistre/card/card.h                   |  34 ++++++
+ drivers/gistre/card/card_exit.c              |  23 ++++
+ drivers/gistre/card/card_fops.c              |   8 ++
+ drivers/gistre/card/card_fops.h              |  16 +++
+ drivers/gistre/card/card_init.c              |  77 ++++++++++++++
+ drivers/gistre/card/card_read.c              |  21 ++++
+ drivers/gistre/card/card_write.c             | 105 +++++++++++++++++++
+ drivers/gistre/card/card_write_funcs.h       |  10 ++
+ drivers/gistre/card/card_write_gen_rand_id.c |   6 ++
+ drivers/gistre/card/card_write_mem_read.c    |  25 +++++
+ drivers/gistre/card/card_write_mem_write.c   |  30 ++++++
+ 13 files changed, 370 insertions(+)
+ create mode 100644 drivers/gistre/card/card.h
+ create mode 100644 drivers/gistre/card/card_exit.c
+ create mode 100644 drivers/gistre/card/card_fops.c
+ create mode 100644 drivers/gistre/card/card_fops.h
+ create mode 100644 drivers/gistre/card/card_init.c
+ create mode 100644 drivers/gistre/card/card_read.c
+ create mode 100644 drivers/gistre/card/card_write.c
+ create mode 100644 drivers/gistre/card/card_write_funcs.h
+ create mode 100644 drivers/gistre/card/card_write_gen_rand_id.c
+ create mode 100644 drivers/gistre/card/card_write_mem_read.c
+ create mode 100644 drivers/gistre/card/card_write_mem_write.c
 
 diff --git a/drivers/gistre/Kconfig b/drivers/gistre/Kconfig
 index d727549fe777..1e741bd29d3f 100644
@@ -457,3 +483,6 @@ index 000000000000..5a0a5854595f
 +
 +	regmap_write(regmap, MFRC522_CMDREG, MFRC522_IDLE);
 +}
+-- 
+2.27.0
+
