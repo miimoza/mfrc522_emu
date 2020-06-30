@@ -1,0 +1,459 @@
+commit dc124aca92ec58fbe9f4e10f604300a6f2ec8aa3
+Author: Dorian Vinai <dorian.vinai@epita.fr>
+Date:   Tue Jun 30 19:52:17 2020 +0200
+
+    Implemented MFRC522 driver
+
+diff --git a/drivers/gistre/Kconfig b/drivers/gistre/Kconfig
+index d727549fe777..1e741bd29d3f 100644
+--- a/drivers/gistre/Kconfig
++++ b/drivers/gistre/Kconfig
+@@ -12,4 +12,9 @@ config MFRC522_EMU
+       API and hides it behind a fake I2C device; which should not
+       matter in any way when communicating with it.
+ 
++ config GISTRE_CARD
++	bool "GISTRE card"
++	help
++      A simple driver for the RFID MRFC522 Card Reader Device.
++
+ endmenu
+diff --git a/drivers/gistre/Makefile b/drivers/gistre/Makefile
+index fefea26fd91f..eb67401da822 100644
+--- a/drivers/gistre/Makefile
++++ b/drivers/gistre/Makefile
+@@ -4,3 +4,13 @@ obj-$(CONFIG_MFRC522_EMU)        += \
+ 	mfrc522_emu_internals.o \
+ 	mfrc522_emu.o \
+ 	mfrc522_emu_drv.o
++
++obj-$(CONFIG_GISTRE_CARD) += \
++	card/card_init.o \
++	card/card_exit.o \
++	card/card_fops.o \
++	card/card_read.o \
++	card/card_write.o \
++	card/card_write_mem_write.o \
++	card/card_write_mem_read.o \
++	card/card_write_gen_rand_id.o
+diff --git a/drivers/gistre/card/card.h b/drivers/gistre/card/card.h
+new file mode 100644
+index 000000000000..496400b49e6c
+--- /dev/null
++++ b/drivers/gistre/card/card.h
+@@ -0,0 +1,34 @@
++#ifndef CARD_H
++#define CARD_H
++
++#include <linux/cdev.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <stdbool.h>
++
++#include "../mfrc522.h"
++
++#define MFRC522_NAME "mfrc522_emu"
++#define MFRC522_PROP MFRC522_PROP_VERSION
++
++// Metadata
++MODULE_DESCRIPTION(
++	"CARD DRIVER MRFC522: RFID RC522, Module MFRC-522 RF IC RFID S50 13.56MHz");
++MODULE_AUTHOR(
++	"Dorian Vinai <dorian.vinai@epita.fr>, Antoine Coulon <antoine.coulon@epita.fr>");
++MODULE_LICENSE("GPL v2");
++
++struct card_dev {
++	struct cdev cdev;
++	char buffer[64];
++	size_t buffer_len;
++	bool debug;
++};
++
++extern int major;
++extern struct card_dev *c_dev;
++
++__init int card_init(void);
++__exit void card_exit(void);
++
++#endif
+diff --git a/drivers/gistre/card/card_exit.c b/drivers/gistre/card/card_exit.c
+new file mode 100644
+index 000000000000..fe9099d8e542
+--- /dev/null
++++ b/drivers/gistre/card/card_exit.c
+@@ -0,0 +1,23 @@
++#include <linux/slab.h>
++
++#include "card.h"
++#include "card_fops.h"
++
++static void card_destroy(struct card_dev *dev)
++{
++	cdev_del(&dev->cdev);
++	kfree(dev);
++}
++
++__exit void card_exit(void)
++{
++	dev_t dev;
++
++	dev = MKDEV(major, 0);
++	card_destroy(c_dev);
++	unregister_chrdev_region(dev, 1);
++
++	pr_info("Goodbye, GISTRE card !\n");
++}
++
++module_exit(card_exit);
+diff --git a/drivers/gistre/card/card_fops.c b/drivers/gistre/card/card_fops.c
+new file mode 100644
+index 000000000000..28b4325a8adc
+--- /dev/null
++++ b/drivers/gistre/card/card_fops.c
+@@ -0,0 +1,8 @@
++#include "card_fops.h"
++
++struct file_operations card_fops = {
++	.owner = THIS_MODULE,
++	.read = card_read,
++	.write = card_write
++	/* Others functions are using the kernel's defaults */
++};
+diff --git a/drivers/gistre/card/card_fops.h b/drivers/gistre/card/card_fops.h
+new file mode 100644
+index 000000000000..fad510a3d5a2
+--- /dev/null
++++ b/drivers/gistre/card/card_fops.h
+@@ -0,0 +1,16 @@
++#ifndef CARD_FOPS_H
++#define CARD_FOPS_H
++
++#include <linux/fs.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++
++extern struct file_operations card_fops;
++
++ssize_t card_read(struct file *file, char __user *buf, size_t len,
++		  loff_t *off /* unused */);
++
++ssize_t card_write(struct file *file, const char __user *buf, size_t len,
++		   loff_t *off /* unused */);
++
++#endif /* CARD_FOPS_H */
+diff --git a/drivers/gistre/card/card_init.c b/drivers/gistre/card/card_init.c
+new file mode 100644
+index 000000000000..84c7c2c6d294
+--- /dev/null
++++ b/drivers/gistre/card/card_init.c
+@@ -0,0 +1,77 @@
++#include <linux/errno.h>
++#include <linux/of.h>
++#include <linux/slab.h>
++
++#include "card.h"
++#include "card_fops.h"
++
++int major;
++struct card_dev *c_dev;
++
++static struct card_dev *card_create(void)
++{
++	struct card_dev *dev = kmalloc(sizeof(*dev), GFP_KERNEL);
++	if (!dev)
++		return NULL;
++
++	dev->cdev.owner = THIS_MODULE;
++	cdev_init(&dev->cdev, &card_fops);
++
++	dev->buffer[0] = '\0';
++	dev->buffer_len = 0;
++
++	dev->debug = false;
++
++	return dev;
++}
++
++__init int card_init(void)
++{
++	const char devname[] = "gistre_card";
++	struct device_node *device_node;
++	dev_t dev;
++	int ret;
++	u32 version;
++
++	pr_info("Hello, GISTRE card !\n");
++
++	/* Allocate major */
++	ret = alloc_chrdev_region(&dev, 0, 1, devname);
++	if (ret < 0) {
++		pr_err("Failed to allocate major\n");
++		return 1;
++	} else {
++		major = MAJOR(dev);
++		pr_info("Got major %d\n", major);
++	}
++
++	/* Register char device */
++	c_dev = card_create();
++	if (!c_dev) {
++		pr_err("Failed to init pingpong_dev\n");
++		return -ENOMEM;
++	}
++
++	if (cdev_add(&c_dev->cdev, dev, 1) < 0) {
++		pr_err("Failed to register char device\n");
++		return -ENOMEM;
++	}
++
++	device_node = of_find_node_by_name(of_root, MFRC522_NAME);
++	if (!device_node) {
++		pr_err("%s: Did not find node %s...\n", __func__, MFRC522_NAME);
++		return 1;
++	}
++
++	if (of_property_read_u32(device_node, MFRC522_PROP, &version)) {
++		pr_err("%s: Did not find property \"%s\"\n", __func__,
++		       MFRC522_PROP);
++		return 1;
++	} else {
++		pr_info("%s: \"%s\": %u\n", __func__, MFRC522_PROP, version);
++	}
++
++	return 0;
++}
++
++module_init(card_init);
+diff --git a/drivers/gistre/card/card_read.c b/drivers/gistre/card/card_read.c
+new file mode 100644
+index 000000000000..f80f20581414
+--- /dev/null
++++ b/drivers/gistre/card/card_read.c
+@@ -0,0 +1,21 @@
++#include <linux/regmap.h>
++#include <linux/uaccess.h>
++
++#include "../mfrc522.h"
++#include "../mfrc522_emu.h"
++#include "card.h"
++#include "card_fops.h"
++
++ssize_t card_read(struct file *file, char __user *buf, size_t len,
++		  loff_t *off /* unused */)
++{
++	if (copy_to_user(buf, c_dev->buffer, c_dev->buffer_len)) {
++		pr_err("Failed to copy data to user\n");
++		return -EFAULT;
++	}
++
++	len = c_dev->buffer_len;
++	c_dev->buffer_len = 0;
++	c_dev->buffer[0] = '\0';
++	return len;
++}
+diff --git a/drivers/gistre/card/card_write.c b/drivers/gistre/card/card_write.c
+new file mode 100644
+index 000000000000..5363022ca0ae
+--- /dev/null
++++ b/drivers/gistre/card/card_write.c
+@@ -0,0 +1,105 @@
++#include <linux/regmap.h>
++#include <linux/slab.h>
++#include <linux/string.h>
++#include <linux/uaccess.h>
++
++#include "../mfrc522.h"
++#include "../mfrc522_emu.h"
++#include "card.h"
++#include "card_fops.h"
++#include "card_write_funcs.h"
++
++static ssize_t atoi(char *string)
++{
++	int result = 0;
++	unsigned int digit;
++
++	for (;; string += 1) {
++		digit = *string - '0';
++		if (digit > 9) {
++			break;
++		}
++		result = (10 * result) + digit;
++	}
++
++	return result;
++}
++
++static void mem_write_parser(struct regmap *regmap, char *buf, size_t len)
++{
++	size_t buflen_size = 0;
++	char *buflen_str;
++	ssize_t buflen;
++	char *data;
++	size_t data_len;
++
++	for (; buf[buflen_size + 10] != '\0' && buf[buflen_size + 10] != ':';
++	     buflen_size++)
++		;
++	if (buflen_size == 0) {
++		pr_err("Buffer len Size Null\n");
++		return;
++	}
++
++	//char buflen_str[buflen_size + 1];
++	buflen_str = kmalloc(buflen_size + 1, GFP_KERNEL);
++	strncpy(buflen_str, &buf[10], buflen_size);
++	buflen_str[buflen_size] = '\0';
++
++	buflen = atoi(buflen_str);
++	kfree(buflen_str);
++
++	if (buflen == -1) {
++		pr_err("Buffer Len not a digit\n");
++		return;
++	}
++
++	data = buf + 10 + buflen_size + 1;
++	data_len = strlen(data);
++
++	if (data_len > 25) {
++		data[25] = '\0';
++		data_len = 25;
++	}
++
++	regmap_write(regmap, MFRC522_FIFOLEVELREG_FLUSH, 0x1);
++	if (len >= 10 + buflen_size + 1 && buf[10 + buflen_size] == ':')
++		mem_write(regmap, buf + 10 + buflen_size + 1, buflen);
++	else
++		pr_err("Command Parsing Error\n");
++}
++
++ssize_t card_write(struct file *file, const char __user *buf, size_t len,
++		   loff_t *off /* unused */)
++{
++	struct regmap *regmap;
++	char *cmd;
++
++	regmap = mfrc522_get_regmap(dev_to_mfrc522(mfrc522_find_dev()));
++
++	cmd = kmalloc(len + 1, GFP_KERNEL);
++
++	if (copy_from_user(cmd, buf, len)) {
++		pr_err("Failed to copy data from user\n");
++		return -EFAULT;
++	}
++
++	cmd[len] = '\0';
++
++	if (len >= 12 && !strncmp(cmd, "mem_write:", 10))
++		mem_write_parser(regmap, cmd, len);
++	else if (len == 8 && !strncmp(cmd, "mem_read", 8))
++		mem_read(regmap);
++	else if (len == 11 && !strncmp(cmd, "gen_rand_id", 11))
++		gen_rand_id(regmap);
++	else if (len == 8 && !strcmp(cmd, "debug:on"))
++		c_dev->debug = true;
++	else if (len == 9 && !strcmp(cmd, "debug:off"))
++		c_dev->debug = false;
++	else
++		pr_err("Invalid Command %s\n", cmd);
++
++	kfree(cmd);
++
++	return len;
++}
+diff --git a/drivers/gistre/card/card_write_funcs.h b/drivers/gistre/card/card_write_funcs.h
+new file mode 100644
+index 000000000000..7778039b8016
+--- /dev/null
++++ b/drivers/gistre/card/card_write_funcs.h
+@@ -0,0 +1,10 @@
++#include <linux/regmap.h>
++
++#include "../mfrc522.h"
++#include "../mfrc522_emu.h"
++#include "card.h"
++#include "card_fops.h"
++
++void mem_read(struct regmap *regmap);
++void mem_write(struct regmap *regmap, const char __user *buf, size_t len);
++void gen_rand_id(struct regmap *regmap);
+diff --git a/drivers/gistre/card/card_write_gen_rand_id.c b/drivers/gistre/card/card_write_gen_rand_id.c
+new file mode 100644
+index 000000000000..79266ac120e8
+--- /dev/null
++++ b/drivers/gistre/card/card_write_gen_rand_id.c
+@@ -0,0 +1,6 @@
++#include "card_write_funcs.h"
++
++void gen_rand_id(struct regmap *regmap)
++{
++	regmap_write(regmap, MFRC522_CMDREG, MFRC522_GENERATERANDOMID);
++}
+diff --git a/drivers/gistre/card/card_write_mem_read.c b/drivers/gistre/card/card_write_mem_read.c
+new file mode 100644
+index 000000000000..e6f6f6885f26
+--- /dev/null
++++ b/drivers/gistre/card/card_write_mem_read.c
+@@ -0,0 +1,25 @@
++#include "card_write_funcs.h"
++
++void mem_read(struct regmap *regmap)
++{
++	size_t i;
++	regmap_write(regmap, MFRC522_CMDREG, MFRC522_MEM);
++
++	if (c_dev->debug)
++		printk("<RD>\n");
++
++	for (i = 0; i < 25; i++) {
++		regmap_read(regmap, MFRC522_FIFODATAREG,
++			    (void *)(&c_dev->buffer[i]));
++		if (c_dev->debug) {
++			printk(KERN_CONT "%02x", c_dev->buffer[i]);
++			if ((i + 1) % 5 == 0)
++				printk("\n");
++			else
++				printk(KERN_CONT " ");
++		}
++	}
++
++	c_dev->buffer_len = i;
++	regmap_write(regmap, MFRC522_CMDREG, MFRC522_IDLE);
++}
+diff --git a/drivers/gistre/card/card_write_mem_write.c b/drivers/gistre/card/card_write_mem_write.c
+new file mode 100644
+index 000000000000..5a0a5854595f
+--- /dev/null
++++ b/drivers/gistre/card/card_write_mem_write.c
+@@ -0,0 +1,30 @@
++#include "card_write_funcs.h"
++
++void mem_write(struct regmap *regmap, const char *buf, size_t len)
++{
++	size_t i;
++	char c;
++	regmap_write(regmap, MFRC522_CMDREG, MFRC522_MEM);
++
++	if (c_dev->debug)
++		printk("<WR>\n");
++
++	for (i = 0; i < 25; i++) {
++		if (i < len)
++			c = buf[i];
++		else
++			c = '\0';
++
++		regmap_write(regmap, MFRC522_FIFODATAREG, c);
++
++		if (c_dev->debug) {
++			printk(KERN_CONT "%02x", c);
++			if ((i + 1) % 5 == 0)
++				printk("\n");
++			else
++				printk(KERN_CONT " ");
++		}
++	}
++
++	regmap_write(regmap, MFRC522_CMDREG, MFRC522_IDLE);
++}
