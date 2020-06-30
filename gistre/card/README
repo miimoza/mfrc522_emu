@@ -14,7 +14,9 @@
     - `gen_rand_id`
 - [ ] Bonus 0
 - [ ] Bonus 1
-- [ ] Bonus 2
+- [X] Bonus 2
+    - `bonus:on`
+    - `bonus:off`
 - [ ] Bonus 3
 - [ ] Bonus N
 
